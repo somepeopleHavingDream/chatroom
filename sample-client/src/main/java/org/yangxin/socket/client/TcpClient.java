@@ -1,5 +1,6 @@
 package org.yangxin.socket.client;
 
+import lombok.Setter;
 import org.yangxin.socket.client.bean.ServerInfo;
 import org.yangxin.socket.lib.utils.CloseUtils;
 
@@ -46,11 +47,12 @@ public class TcpClient {
         System.out.println("服务端信息：" + socket.getInetAddress() + " P: " + socket.getPort());
 
         try {
-            ReadHandler readHandler = new ReadHandler(socket.getInputStream());
-            Thread thread = new Thread(readHandler);
+            ReadHandler handler = new ReadHandler(socket.getInputStream());
+            Thread thread = new Thread(handler);
+            handler.setThread(thread);
             thread.start();
 
-            return new TcpClient(socket, readHandler);
+            return new TcpClient(socket, handler);
         } catch (Exception e) {
             System.out.println("连接异常");
             CloseUtils.close(socket);
@@ -59,10 +61,12 @@ public class TcpClient {
         return null;
     }
 
+    @Setter
     private static class ReadHandler implements Runnable {
 
-        private boolean done = false;
+//        private boolean done = false;
         private final InputStream inputStream;
+        private Thread thread;
 
         private ReadHandler(InputStream inputStream) {
             this.inputStream = inputStream;
@@ -89,9 +93,9 @@ public class TcpClient {
                     }
                     // 打印到屏幕
                     System.out.println(msg);
-                } while (!done);
+                } while (!Thread.currentThread().isInterrupted());
             } catch (Exception e) {
-                if (!done) {
+                if (!Thread.currentThread().isInterrupted()) {
                     System.out.println("连接异常断开：" + e.getMessage());
                 }
             } finally {
@@ -101,7 +105,7 @@ public class TcpClient {
         }
 
         private void exit() {
-            done = true;
+            thread.interrupt();
             CloseUtils.close(inputStream);
         }
     }

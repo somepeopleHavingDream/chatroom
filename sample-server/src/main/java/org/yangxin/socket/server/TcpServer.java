@@ -1,5 +1,6 @@
 package org.yangxin.socket.server;
 
+import lombok.Setter;
 import org.yangxin.socket.lib.utils.CloseUtils;
 import org.yangxin.socket.server.handle.ClientHandler;
 
@@ -25,7 +26,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
 
     private final int port;
     private ClientListener listener;
-    private List<ClientHandler> handlers = new ArrayList<>();
+    private final List<ClientHandler> handlers = new ArrayList<>();
     private final ExecutorService forwardingExecutor;
     private Selector selector;
     private ServerSocketChannel channel;
@@ -47,7 +48,6 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
             channel.socket().bind(new InetSocketAddress(port));
             // 注册客户端连接到达监听
             channel.register(selector, SelectionKey.OP_ACCEPT);
-
             this.channel = channel;
 
             System.out.println("服务器信息：" + channel.getLocalAddress().toString());
@@ -56,6 +56,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
             ClientListener listener = new ClientListener();
             this.listener = listener;
             Thread thread = new Thread(listener);
+            listener.setThread(thread);
             thread.start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -114,9 +115,14 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
         });
     }
 
+    /**
+     * 客户端监听者
+     */
+    @Setter
     private class ClientListener implements Runnable {
 
-        private boolean done = false;
+//        private boolean done = false;
+        private Thread thread;
 
         @Override
         public void run() {
@@ -128,7 +134,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                 // 得到客户端
                 try {
                     if (selector.select() == 0) {
-                        if (done) {
+                        if (Thread.currentThread().isInterrupted()) {
                             break;
                         }
                         continue;
@@ -136,7 +142,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
 
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                     while (iterator.hasNext()) {
-                        if (done) {
+                        if (Thread.currentThread().isInterrupted()) {
                             break;
                         }
 
@@ -148,11 +154,11 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                         if (key.isAcceptable()) {
                             ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
                             // 非阻塞状态拿到客户端连接
-                            SocketChannel channel = serverChannel.accept();
+                            SocketChannel clientChannel = serverChannel.accept();
 
                             try {
                                 // 客户端构建异步线程
-                                ClientHandler handler = new ClientHandler(channel, TcpServer.this);
+                                ClientHandler handler = new ClientHandler(clientChannel, TcpServer.this);
                                 // 读取数据并打印
                                 handler.readToPrint();
                                 // 添加同步处理
@@ -168,13 +174,13 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            } while (!done);
+            } while (!Thread.currentThread().isInterrupted());
 
             System.out.println("服务器已关闭！");
         }
 
         public void exit() {
-            done = true;
+            thread.interrupt();
             // 唤醒当前的阻塞
             selector.wakeup();
         }

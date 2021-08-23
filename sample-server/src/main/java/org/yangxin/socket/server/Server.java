@@ -14,8 +14,8 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
         // 启动tcp服务端
-        TcpServer tcpServer = new TcpServer(TcpConstants.PORT_SERVER);
-        boolean isSucceed = tcpServer.start();
+        TcpServer server = new TcpServer(TcpConstants.PORT_SERVER);
+        boolean isSucceed = server.start();
         if (!isSucceed) {
             System.out.println("Start tcp server failed!");
             return;
@@ -25,15 +25,15 @@ public class Server {
         UdpProvider.start(TcpConstants.PORT_SERVER);
 
         // 监听键盘输入
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String str;
         do {
-            str = bufferedReader.readLine();
-            tcpServer.broadcast(str);
+            str = reader.readLine();
+            server.broadcast(str);
         } while (!"00bye00".equalsIgnoreCase(str));
 
         // 关闭相关资源
         UdpProvider.stop();
-        tcpServer.stop();
+        server.stop();
     }
 }

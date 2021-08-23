@@ -1,5 +1,6 @@
 package org.yangxin.socket.server.handle;
 
+import lombok.Setter;
 import org.yangxin.socket.lib.utils.CloseUtils;
 
 import java.io.IOException;
@@ -62,6 +63,7 @@ public class ClientHandler {
 
     public void readToPrint() {
         Thread thread = new Thread(readHandler);
+        readHandler.setThread(thread);
         thread.start();
     }
 
@@ -88,11 +90,13 @@ public class ClientHandler {
         void onNewMessageArrived(ClientHandler handler, String msg);
     }
 
+    @Setter
     private class ClientReadHandler implements Runnable {
 
-        private boolean done = false;
+//        private boolean done = false;
         private final Selector selector;
         private final ByteBuffer buffer;
+        private Thread thread;
 
         private ClientReadHandler(Selector selector) {
             this.selector = selector;
@@ -105,7 +109,7 @@ public class ClientHandler {
                 do {
                     // 客户端拿到一条数据
                     if (selector.select() == 0) {
-                        if (done) {
+                        if (Thread.currentThread().isInterrupted()) {
                             break;
                         }
                         continue;
@@ -113,21 +117,22 @@ public class ClientHandler {
 
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                     while (iterator.hasNext()) {
-                        if (done) {
+                        if (Thread.currentThread().isInterrupted()) {
                             break;
                         }
 
                         SelectionKey key = iterator.next();
                         iterator.remove();
 
+                        // 可读事件
                         if (key.isReadable()) {
-                            SocketChannel client = (SocketChannel) key.channel();
+                            SocketChannel channel = (SocketChannel) key.channel();
 
                             // 清空操作
                             buffer.clear();
 
                             // 读取
-                            int read = client.read(buffer);
+                            int read = channel.read(buffer);
                             if (read > 0) {
                                 // 丢弃换行符
                                 String msg = new String(buffer.array(), 0, read - 1);
@@ -142,9 +147,9 @@ public class ClientHandler {
                             }
                         }
                     }
-                } while (!done);
+                } while (!Thread.currentThread().isInterrupted());
             } catch (IOException e) {
-                if (!done) {
+                if (!Thread.currentThread().isInterrupted()) {
                     System.out.println("连接异常断开！");
                     ClientHandler.this.exitBySelf();
                 }
@@ -155,7 +160,7 @@ public class ClientHandler {
         }
 
         public void exit() {
-            done = true;
+            thread.interrupt();
             selector.wakeup();
             CloseUtils.close(selector);
         }
@@ -193,7 +198,7 @@ public class ClientHandler {
             private final String msg;
 
             public WriteRunnable(String msg) {
-                this.msg = msg +'\n';
+                this.msg = msg + '\n';
             }
 
             @Override

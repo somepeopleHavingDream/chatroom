@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
  * @author yangxin
  * 2021/8/23 下午8:55
  */
+@SuppressWarnings("AlibabaUndefineMagicConstant")
 public class Client {
 
     public static void main(String[] args) {
@@ -37,7 +38,7 @@ public class Client {
         }
     }
 
-    private static void write(TcpClient tcpClient) throws IOException {
+    private static void write(TcpClient client) throws IOException {
         // 构建键盘输入流
         InputStream in = System.in;
         BufferedReader input = new BufferedReader(new InputStreamReader(in));
@@ -46,7 +47,7 @@ public class Client {
             // 键盘读取一行
             String msg = input.readLine();
             // 发送到服务器
-            tcpClient.send(msg);
+            client.send(msg);
 
             if ("00bye00".equalsIgnoreCase(msg)) {
                 break;
