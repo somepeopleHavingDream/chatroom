@@ -1,6 +1,7 @@
 package org.yangxin.socket.server;
 
 import org.yangxin.socket.foo.constants.TcpConstants;
+import org.yangxin.socket.lib.core.IoContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,6 +14,9 @@ import java.io.InputStreamReader;
 public class Server {
 
     public static void main(String[] args) throws IOException {
+        IoContext.setup()
+                .ioProvider(new IoSelectorProvider())
+
         // 启动tcp服务端
         TcpServer server = new TcpServer(TcpConstants.PORT_SERVER);
         boolean isSucceed = server.start();
