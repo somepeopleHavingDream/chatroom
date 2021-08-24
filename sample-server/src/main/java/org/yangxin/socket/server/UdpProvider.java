@@ -38,6 +38,7 @@ public class UdpProvider {
         if (providerInstance != null) {
             // udp提供者实例退出
             providerInstance.exit();
+            providerInstance = null;
         }
     }
 

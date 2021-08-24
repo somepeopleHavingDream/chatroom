@@ -10,7 +10,7 @@ import java.util.List;
  * @author yangxin
  * 2021/8/23 下午9:14
  */
-@SuppressWarnings({"AlibabaAvoidManuallyCreateThread", "ResultOfMethodCallIgnored", "BusyWait"})
+@SuppressWarnings({"AlibabaAvoidManuallyCreateThread", "ResultOfMethodCallIgnored", "BusyWait", "AlibabaUndefineMagicConstant"})
 public class ClientTest {
 
     private static boolean done;

@@ -64,7 +64,6 @@ public class TcpClient {
     @Setter
     private static class ReadHandler implements Runnable {
 
-//        private boolean done = false;
         private final InputStream inputStream;
         private Thread thread;
 

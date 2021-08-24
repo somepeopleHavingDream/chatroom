@@ -55,6 +55,20 @@ public class UdpSearcher {
         return null;
     }
 
+    private static Listener listen(CountDownLatch receiveLatch) throws InterruptedException {
+        System.out.println("UdpSearcher start listen.");
+
+        // 开启监听
+        CountDownLatch startDownLatch = new CountDownLatch(1);
+        Listener listener = new Listener(LISTEN_PORT, startDownLatch, receiveLatch);
+        Thread thread = new Thread(listener);
+        thread.start();
+
+        // 等待监听开启
+        startDownLatch.await();
+        return listener;
+    }
+
     private static void sendBroadcast() throws IOException {
         System.out.println("UdpSearcher sendBroadcast started.");
 
@@ -82,20 +96,6 @@ public class UdpSearcher {
 
         // 完成
         System.out.println("UdpSearcher sendBroadcast finished.");
-    }
-
-    private static Listener listen(CountDownLatch receiveLatch) throws InterruptedException {
-        System.out.println("UdpSearcher start listen.");
-
-        // 开启监听
-        CountDownLatch startDownLatch = new CountDownLatch(1);
-        Listener listener = new Listener(LISTEN_PORT, startDownLatch, receiveLatch);
-        Thread thread = new Thread(listener);
-        thread.start();
-
-        // 等待监听开启
-        startDownLatch.await();
-        return listener;
     }
 
     private static class Listener implements Runnable {

@@ -159,8 +159,6 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                             try {
                                 // 客户端构建异步线程
                                 ClientHandler handler = new ClientHandler(clientChannel, TcpServer.this);
-                                // 读取数据并打印
-                                handler.readToPrint();
                                 // 添加同步处理
                                 synchronized (TcpServer.this) {
                                     handlers.add(handler);
