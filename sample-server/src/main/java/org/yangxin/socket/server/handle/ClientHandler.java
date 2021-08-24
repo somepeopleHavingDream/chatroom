@@ -1,6 +1,6 @@
 package org.yangxin.socket.server.handle;
 
-import org.yangxin.socket.lib.core.Connector;
+import org.yangxin.socket.lib.core.Connection;
 import org.yangxin.socket.lib.utils.CloseUtils;
 
 import java.io.IOException;
@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("AlibabaAvoidManuallyCreateThread")
 public class ClientHandler {
 
-    private final Connector connector;
+    private final Connection connection;
     private final SocketChannel channel;
     private final ClientWriteHandler writeHandler;
     private final ClientHandlerCallback handlerCallback;
@@ -27,7 +27,7 @@ public class ClientHandler {
     public ClientHandler(SocketChannel channel, ClientHandlerCallback handlerCallback) throws IOException {
         this.channel = channel;
 
-        connector = new Connector() {
+        connection = new Connection() {
 
             @Override
             public void onChannelClosed(SocketChannel channel) {
@@ -41,7 +41,7 @@ public class ClientHandler {
                 handlerCallback.onNewMessageArrived(ClientHandler.this, str);
             }
         };
-        connector.setup(channel);
+        connection.setup(channel);
 
         Selector writeSelector = Selector.open();
         channel.register(writeSelector, SelectionKey.OP_WRITE);
@@ -58,7 +58,7 @@ public class ClientHandler {
     }
 
     public void exit() {
-        CloseUtils.close(connector);
+        CloseUtils.close(connection);
         writeHandler.exit();
         CloseUtils.close(channel);
 

@@ -3,12 +3,21 @@ package org.yangxin.socket.lib.core;
 import java.io.IOException;
 
 /**
+ * 输入输出上下文
+ *
  * @author yangxin
  * 2021/8/24 17:31
  */
 public class IoContext {
 
+    /**
+     * 当前输入输出上下文实例
+     */
     private static IoContext instance;
+
+    /**
+     * 输入输出提供者
+     */
     private final IoProvider ioProvider;
 
     private IoContext(IoProvider ioProvider) {
@@ -19,6 +28,11 @@ public class IoContext {
         return ioProvider;
     }
 
+    /**
+     * 返回当前输入输出上下文实例
+     *
+     * @return 当前输入输出上下文实例
+     */
     public static IoContext get() {
         return instance;
     }

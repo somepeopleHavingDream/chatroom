@@ -11,17 +11,42 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ * 套接字通道适配器
+ *
  * @author yangxin
  * 2021/8/24 11:34
  */
+@SuppressWarnings("CloneableClassWithoutClone")
 public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
 
+    /**
+     * 当前套接字通道适配者是否关闭
+     */
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
+
+    /**
+     * 当前套接字通道适配者所处的通道
+     */
     private final SocketChannel channel;
+
+    /**
+     * 输入输出提供者
+     */
     private final IoProvider ioProvider;
+
+    /**
+     * 当通道状态发生改变时的监听
+     */
     private final OnChannelStatusChangedListener listener;
 
+    /**
+     * 接收的输入输出事件监听器
+     */
     private IoArgs.IoArgsEventListener receiveIoEventListener;
+
+    /**
+     * 发送的输入输出事件监听器
+     */
     private IoArgs.IoArgsEventListener sendIoEventListener;
 
     public SocketChannelAdapter(SocketChannel channel, IoProvider ioProvider, OnChannelStatusChangedListener listener) throws IOException {
@@ -29,6 +54,7 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
         this.ioProvider = ioProvider;
         this.listener = listener;
 
+        // 配置当前通道非阻塞
         channel.configureBlocking(false);
     }
 
@@ -81,6 +107,7 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
 
     @Override
     public boolean receiveAsync(IoArgs.IoArgsEventListener listener) throws IOException {
+        // 如果该套接字通道适配器已关闭，则抛出输入输出异常
         if (isClosed.get()) {
             throw new IOException("Current channel is closed!");
         }
