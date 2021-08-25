@@ -51,6 +51,7 @@ public class IoContext {
         ioProvider.close();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public static class StartedBoot {
 
         private IoProvider provider;
@@ -64,6 +65,11 @@ public class IoContext {
             return this;
         }
 
+        /**
+         * 启动，返回输入输出上下文
+         *
+         * @return 输入输出上下文
+         */
         public IoContext start() {
             instance = new IoContext(provider);
             return instance;

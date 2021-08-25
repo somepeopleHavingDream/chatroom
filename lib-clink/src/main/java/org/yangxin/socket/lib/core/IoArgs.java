@@ -10,14 +10,28 @@ import java.nio.channels.SocketChannel;
  */
 public class IoArgs {
 
-    private byte[] byteBuffer = new byte[256];
-    private ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
+    private final byte[] byteBuffer = new byte[256];
+    private final ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
 
+    /**
+     * 从通道中读数据
+     *
+     * @param channel 通道
+     * @return 读了多少个字节
+     * @throws IOException 输入输出异常
+     */
     public int read(SocketChannel channel) throws IOException {
         buffer.clear();
         return channel.read(buffer);
     }
 
+    /**
+     * 写数据到通道中
+     *
+     * @param channel 通道
+     * @return 写了多少个字节
+     * @throws IOException 输入输出异常
+     */
     public int write(SocketChannel channel) throws IOException {
         return channel.write(buffer);
     }

@@ -101,6 +101,6 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
     };
 
     protected void onReceiveNewMessage(String str) {
-        System.out.println(key.toString() + ":" + str);
+        System.out.println(key + ":" + str);
     }
 }

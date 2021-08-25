@@ -153,7 +153,6 @@ public class IoSelectorProvider implements IoProvider {
      * @param runnable 可运行实例
      * @return 注册成功之后的选择键
      */
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     private static SelectionKey registerSelection(SocketChannel channel,
                                                   Selector selector,
                                                   int registerOps,
@@ -178,6 +177,7 @@ public class IoSelectorProvider implements IoProvider {
                     }
                 }
 
+                // 如果该通道未被注册过
                 if (key == null) {
                     // 注册selector得到Key
                     key = channel.register(selector, registerOps);
@@ -185,6 +185,7 @@ public class IoSelectorProvider implements IoProvider {
                     map.put(key, runnable);
                 }
 
+                // 返回选择键
                 return key;
             } catch (ClosedChannelException e) {
                 return null;

@@ -54,6 +54,9 @@ public interface IoProvider extends Closeable {
         protected abstract void canProviderInput();
     }
 
+    /**
+     * 处理输出回调
+     */
     abstract class HandleOutputCallback implements Runnable {
 
         private Object attach;
