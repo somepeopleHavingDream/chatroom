@@ -112,8 +112,10 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
             throw new IOException("Current channel is closed!");
         }
 
+        // 设置接收输入输出事件监听器
         receiveIoEventListener = listener;
 
+        // 向输入输出提供者注册输入回调
         return ioProvider.registerInput(channel, inputCallback);
     }
 

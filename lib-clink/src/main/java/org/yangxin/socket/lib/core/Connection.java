@@ -82,7 +82,10 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
 
     }
 
-    private IoArgs.IoArgsEventListener echoReceiveListener = new IoArgs.IoArgsEventListener() {
+    /**
+     * 回声接收监听器
+     */
+    private final IoArgs.IoArgsEventListener echoReceiveListener = new IoArgs.IoArgsEventListener() {
 
         @Override
         public void onStarted(IoArgs args) {

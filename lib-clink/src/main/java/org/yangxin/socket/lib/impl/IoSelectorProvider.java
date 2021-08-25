@@ -30,7 +30,14 @@ public class IoSelectorProvider implements IoProvider {
         是否处于某个过程
      */
 
+    /**
+     * 是否处于注册输入过程
+     */
     private final AtomicBoolean isRegInput = new AtomicBoolean(false);
+
+    /**
+     * 是否处于注册输出过程
+     */
     private final AtomicBoolean inRegOutput = new AtomicBoolean(false);
 
     private final Selector readSelector;
@@ -135,6 +142,18 @@ public class IoSelectorProvider implements IoProvider {
         }
     }
 
+    /**
+     * 注册选择
+     *
+     * @param channel 通道
+     * @param selector 选择器
+     * @param registerOps 被注册的操作
+     * @param locker 锁
+     * @param map SelectionKey -> Runnable
+     * @param runnable 可运行实例
+     * @return 注册成功之后的选择键
+     */
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     private static SelectionKey registerSelection(SocketChannel channel,
                                                   Selector selector,
                                                   int registerOps,
@@ -143,6 +162,7 @@ public class IoSelectorProvider implements IoProvider {
                                                   Runnable runnable) {
         synchronized (locker) {
             // 设置锁定状态
+            // 标志当前输入输出选择器提供者处于注册服务过程或者处于注册输出过程
             locker.set(true);
 
             try {
@@ -151,7 +171,7 @@ public class IoSelectorProvider implements IoProvider {
 
                 SelectionKey key = null;
                 if (channel.isRegistered()) {
-                    // 查询是否已经被注册过
+                    // 查询通道是否已经被注册过
                     key = channel.keyFor(selector);
                     if (key != null) {
                         key.interestOps(key.readyOps() | registerOps);
