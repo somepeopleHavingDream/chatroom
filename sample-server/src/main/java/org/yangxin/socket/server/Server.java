@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 public class Server {
 
     public static void main(String[] args) throws IOException {
+        // 启动输入输出上下文
         IoContext.setup()
                 .ioProvider(new IoSelectorProvider())
                 .start();

@@ -25,7 +25,7 @@ public class UdpProvider {
         // 先停止udp提供者
         stop();
 
-        // 实例并启动提供者
+        // 实例并启动和设置提供者
         String sn = UUID.randomUUID().toString();
         Provider provider = new Provider(sn, port);
         Thread thread = new Thread(provider);
@@ -73,6 +73,7 @@ public class UdpProvider {
                 // 接收消息的Packet
                 DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
 
+                // 若该线程未被打断，则一直监听Udp的端口
                 while (!Thread.currentThread().isInterrupted()) {
                     // 接收
                     datagramSocket.receive(receivePacket);

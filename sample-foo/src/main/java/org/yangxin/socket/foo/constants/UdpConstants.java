@@ -14,10 +14,10 @@ public class UdpConstants {
     /**
      * 服务器固话Udp接收端口
      */
-    public static Integer portServer = 30201;
+    public static int portServer = 30201;
 
     /**
      * 客户端回送端口
      */
-    public static Integer portClientResponse = 30202;
+    public static int portClientResponse = 30202;
 }

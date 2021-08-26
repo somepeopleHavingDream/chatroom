@@ -25,8 +25,10 @@ public class ClientHandler {
     private final String clientInfo;
 
     public ClientHandler(SocketChannel channel, ClientHandlerCallback handlerCallback) throws IOException {
+        // 客户端通道
         this.channel = channel;
 
+        // 为该客户端设置连接
         connection = new Connection() {
 
             @Override
@@ -43,6 +45,7 @@ public class ClientHandler {
         };
         connection.setup(channel);
 
+        // 注册写事件，并设置写事件处理者
         Selector writeSelector = Selector.open();
         channel.register(writeSelector, SelectionKey.OP_WRITE);
         this.writeHandler = new ClientWriteHandler(writeSelector);

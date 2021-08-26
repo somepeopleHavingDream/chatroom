@@ -18,6 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 输入输出选择器提供者
+ *
  * @author yangxin
  * 2021/8/24 下午8:09
  */
@@ -50,9 +52,11 @@ public class IoSelectorProvider implements IoProvider {
     private final ExecutorService outputHandlePool;
 
     public IoSelectorProvider() throws IOException {
+        // 实例化一个读选择器、写选择器
         readSelector = Selector.open();
         writeSelector = Selector.open();
 
+        // 实例化一个读事件处理线程池、写事件处理线程池
         inputHandlePool = Executors.newFixedThreadPool(4,
                 new IoProviderThreadFactory("IoProvider-Input-Thread-"));
         outputHandlePool = Executors.newFixedThreadPool(4,
@@ -60,8 +64,12 @@ public class IoSelectorProvider implements IoProvider {
 
         // 开始输入输出的监听
         startRead();
+        startWrite();
     }
 
+    /**
+     * 开始监听读事件
+     */
     private void startRead() {
         Thread thread = new Thread("Clink IoSelectorProvider ReadSelector Thread") {
 
@@ -69,8 +77,46 @@ public class IoSelectorProvider implements IoProvider {
             public void run() {
                 while (!isClosed.get()) {
                     try {
+                        // 如果读选择器没有就绪事件，则等待选择
                         if (readSelector.select() == 0) {
                             waitSelection(isRegInput);
+                            continue;
+                        }
+
+                        // 处理读选择器中所有就绪的事件
+                        Set<SelectionKey> set = readSelector.selectedKeys();
+                        for (SelectionKey key : set) {
+                            // 如果选择键有效，则处理该选择
+                            if (key.isValid()) {
+                                handleSelection(key, SelectionKey.OP_READ, inputCallbackMap, inputHandlePool);
+                            }
+                        }
+
+                        // 清除所有已被处理的就绪事件
+                        set.clear();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        thread.setPriority(Thread.MAX_PRIORITY);
+        // 开启该读事件监听线程
+        thread.start();
+    }
+
+    /**
+     * 开始监听写事件
+     */
+    private void startWrite() {
+        Thread thread = new Thread("Clink IoSelectorProvider WriteSelector Thread") {
+
+            @Override
+            public void run() {
+                while (!isClosed.get()) {
+                    try {
+                        if (writeSelector.select() == 0) {
+                            waitSelection(inRegOutput);
                             continue;
                         }
 
@@ -80,15 +126,14 @@ public class IoSelectorProvider implements IoProvider {
                                 handleSelection(key, SelectionKey.OP_WRITE, outputCallbackMap, outputHandlePool);
                             }
                         }
-                        set.clear();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
         };
-
         thread.setPriority(Thread.MAX_PRIORITY);
+        // 开启该写事件监听线程
         thread.start();
     }
 
@@ -130,6 +175,11 @@ public class IoSelectorProvider implements IoProvider {
         }
     }
 
+    /**
+     * 等待选择
+     *
+     * @param locker 是否处于某个过程
+     */
     private void waitSelection(AtomicBoolean locker) {
         synchronized (locker) {
             if (locker.get()) {
@@ -173,6 +223,7 @@ public class IoSelectorProvider implements IoProvider {
                     // 查询通道是否已经被注册过
                     key = channel.keyFor(selector);
                     if (key != null) {
+                        // 如果该选择键已被注册到该选择器，则为该键增加新的兴趣事件
                         key.interestOps(key.readyOps() | registerOps);
                     }
                 }
@@ -215,6 +266,14 @@ public class IoSelectorProvider implements IoProvider {
         }
     }
 
+    /**
+     * 处理选择
+     *
+     * @param key 被处理的选择键
+     * @param keyOps 键操作
+     * @param map 键所对应的回调映射
+     * @param pool 处理该选择的线程池
+     */
     private static void handleSelection(SelectionKey key,
                                         int keyOps,
                                         Map<SelectionKey, Runnable> map,
@@ -225,6 +284,7 @@ public class IoSelectorProvider implements IoProvider {
 
         Runnable runnable = null;
         try {
+            // 获得该键对应的回调
             runnable = map.get(key);
         } catch (Exception ignored) {
         }
@@ -235,6 +295,9 @@ public class IoSelectorProvider implements IoProvider {
         }
     }
 
+    /**
+     * 输入输出提供者线程工厂
+     */
     private static class IoProviderThreadFactory implements ThreadFactory {
 
         private final ThreadGroup group;

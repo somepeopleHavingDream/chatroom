@@ -9,5 +9,5 @@ public class TcpConstants {
     /**
      * TCP监听端口
      */
-    public static Integer PORT_SERVER = 30401;
+    public static int PORT_SERVER = 30401;
 }

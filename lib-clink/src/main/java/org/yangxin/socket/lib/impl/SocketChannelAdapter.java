@@ -11,7 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 套接字通道适配器
+ * 客户端通道适配器
  *
  * @author yangxin
  * 2021/8/24 11:34

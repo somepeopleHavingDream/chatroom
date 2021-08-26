@@ -37,8 +37,14 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
         this.forwardingExecutor = Executors.newSingleThreadExecutor();
     }
 
+    /**
+     * 启动Tcp服务端
+     *
+     * @return 是否启动成功
+     */
     public boolean start() {
         try {
+            // 获得并设置选择器
             selector = Selector.open();
 
             ServerSocketChannel channel = ServerSocketChannel.open();
@@ -121,7 +127,6 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
     @Setter
     private class ClientListener implements Runnable {
 
-//        private boolean done = false;
         private Thread thread;
 
         @Override
@@ -140,6 +145,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                         continue;
                     }
 
+                    // 处理所有客户端就绪事件
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                     while (iterator.hasNext()) {
                         if (Thread.currentThread().isInterrupted()) {
@@ -157,7 +163,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                             SocketChannel clientChannel = serverChannel.accept();
 
                             try {
-                                // 客户端构建异步线程
+                                // 为客户端构建异步线程
                                 ClientHandler handler = new ClientHandler(clientChannel, TcpServer.this);
                                 // 添加同步处理
                                 synchronized (TcpServer.this) {

@@ -8,7 +8,7 @@ import java.nio.channels.SocketChannel;
 import java.util.UUID;
 
 /**
- * 连接
+ * 连接，实现了当通道状态发生改变时的回调。
  *
  * @author yangxin
  * 2021/8/24 11:33
@@ -43,7 +43,7 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
      * @throws IOException io异常
      */
     public void setup(SocketChannel channel) throws IOException {
-        // 设置通道
+        // 设置客户端通道
         this.channel = channel;
 
         // 通过输入输出上下文获得套接字通道适配器
@@ -65,6 +65,7 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         // 如果接收者不为null，则接收者开始异步地接收消息
         if (receiver != null) {
             try {
+                // 接收者注册输入输出参数事件回调
                 receiver.receiveAsync(echoReceiveListener);
             } catch (IOException e) {
                 System.out.println("开始接收数据异常：" + e.getMessage());

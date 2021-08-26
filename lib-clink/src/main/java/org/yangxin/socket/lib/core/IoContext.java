@@ -38,6 +38,7 @@ public class IoContext {
     }
 
     public static StartedBoot setup() {
+        // 实例化一个启动引导实例
         return new StartedBoot();
     }
 
@@ -51,6 +52,9 @@ public class IoContext {
         ioProvider.close();
     }
 
+    /**
+     * 输入输出上下文的启动引导。
+     */
     @SuppressWarnings("UnusedReturnValue")
     public static class StartedBoot {
 
