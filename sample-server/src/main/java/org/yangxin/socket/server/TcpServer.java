@@ -32,6 +32,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
     private ServerSocketChannel channel;
 
     public TcpServer(int port) {
+        // 设置端口
         this.port = port;
         // 转发线程池
         this.forwardingExecutor = Executors.newSingleThreadExecutor();
@@ -44,7 +45,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
      */
     public boolean start() {
         try {
-            // 获得并设置选择器
+            // 获得并设置选择器，用于监听客户端的连接
             selector = Selector.open();
 
             ServerSocketChannel channel = ServerSocketChannel.open();
@@ -145,9 +146,10 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                         continue;
                     }
 
-                    // 处理所有客户端就绪事件
+                    // 处理所有客户端就绪事件，即客户端接收事件
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                     while (iterator.hasNext()) {
+                        // 如果当前线程被打断，则退出循环
                         if (Thread.currentThread().isInterrupted()) {
                             break;
                         }

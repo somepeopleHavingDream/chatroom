@@ -15,12 +15,12 @@ import java.io.InputStreamReader;
 public class Server {
 
     public static void main(String[] args) throws IOException {
-        // 启动输入输出上下文
+        // 启动输入输出上下文，监听处理
         IoContext.setup()
                 .ioProvider(new IoSelectorProvider())
                 .start();
 
-        // 启动tcp服务端
+        // 启动tcp服务端，监听注册
         TcpServer server = new TcpServer(TcpConstants.PORT_SERVER);
         boolean isSucceed = server.start();
         if (!isSucceed) {
