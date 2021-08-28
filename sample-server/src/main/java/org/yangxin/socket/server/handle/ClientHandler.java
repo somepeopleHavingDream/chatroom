@@ -60,9 +60,15 @@ public class ClientHandler {
         return clientInfo;
     }
 
+    /**
+     * 客户端处理者退出
+     */
     public void exit() {
+        // 退出连接
         CloseUtils.close(connection);
+        // 退出写事件处理者
         writeHandler.exit();
+        // 关闭该客户端通道
         CloseUtils.close(channel);
 
         System.out.println("客户端已退出：" + clientInfo);
@@ -105,12 +111,17 @@ public class ClientHandler {
         private ClientWriteHandler(Selector selector) {
             this.selector = selector;
             this.buffer = ByteBuffer.allocate(256);
+            // 对于每个客户端写处理者来说，都用了一个线程来处理写事件
             this.executorService = Executors.newSingleThreadExecutor();
         }
 
         private void exit() {
+            // 置循环标记为假
             done = true;
+
+            // 关闭用户写事件的选择器
             CloseUtils.close(selector);
+            // 关闭用于执行写事件处理的线程池
             executorService.shutdownNow();
         }
 

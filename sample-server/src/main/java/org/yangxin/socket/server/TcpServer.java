@@ -74,13 +74,16 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
     }
 
     public void stop() {
+        // 退出客户端监听者
         if (listener != null) {
             listener.exit();
         }
 
+        // 关闭服务端套接字通道和用于监听客户端连接的选择器
         CloseUtils.close(channel);
         CloseUtils.close(selector);
 
+        // 退出所有的客户端处理者
         synchronized (TcpServer.this) {
             for (ClientHandler handler : handlers) {
                 handler.exit();
@@ -186,6 +189,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
         }
 
         public void exit() {
+            // 中断客户端监听者循环线程
             thread.interrupt();
             // 唤醒当前的阻塞
             selector.wakeup();

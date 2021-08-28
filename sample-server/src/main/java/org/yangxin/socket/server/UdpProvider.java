@@ -34,6 +34,9 @@ public class UdpProvider {
         providerInstance = provider;
     }
 
+    /**
+     * 停止udp提供者
+     */
     static void stop() {
         if (providerInstance != null) {
             // udp提供者实例退出
@@ -144,6 +147,7 @@ public class UdpProvider {
         }
 
         public void exit() {
+            // 中断循环线程
             thread.interrupt();
             close();
         }
