@@ -2,6 +2,8 @@ package org.yangxin.socket.lib.box;
 
 import org.yangxin.socket.lib.core.ReceivePacket;
 
+import java.io.IOException;
+
 /**
  * @author yangxin
  * 2021/8/28 下午1:18
@@ -24,5 +26,10 @@ public class StringReceivePacket extends ReceivePacket {
 
     public String string() {
         return new String(buffer);
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }
