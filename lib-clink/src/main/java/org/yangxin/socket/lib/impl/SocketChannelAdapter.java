@@ -49,6 +49,8 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
      */
     private IoArgs.IoArgsEventListener sendIoEventListener;
 
+    private IoArgs receiveArgsTemp;
+
     public SocketChannelAdapter(SocketChannel channel, IoProvider ioProvider, OnChannelStatusChangedListener listener) throws IOException {
         this.channel = channel;
         this.ioProvider = ioProvider;
@@ -69,16 +71,14 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
                 return;
             }
 
-            IoArgs args = new IoArgs();
+            IoArgs args = receiveArgsTemp;
             IoArgs.IoArgsEventListener listener = SocketChannelAdapter.this.receiveIoEventListener;
 
-            if (listener != null) {
-                listener.onStarted(args);
-            }
+            listener.onStarted(args);
 
             try {
                 // 具体的读取操作
-                if (args.readFrom(channel) > 0 && listener != null) {
+                if (args.readFrom(channel) > 0) {
                     // 读取完成回调
                     listener.onCompleted(args);
                 } else {
@@ -101,19 +101,39 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
                 return;
             }
 
-            sendIoEventListener.onCompleted(null);
+            IoArgs args = getAttach();
+            IoArgs.IoArgsEventListener listener = sendIoEventListener;
+
+            listener.onStarted(args);
+
+            try {
+                // 具体的读取操作
+                if (args.writeTo(channel) > 0) {
+                    // 读取完成回调
+                    listener.onCompleted(args);
+                } else {
+                    throw new IOException("Cannot write any data!");
+                }
+            } catch (IOException e) {
+                CloseUtils.close(SocketChannelAdapter.this);
+            }
         }
     };
 
     @Override
-    public boolean receiveAsync(IoArgs.IoArgsEventListener listener) throws IOException {
+    public void setReceiveListener(IoArgs.IoArgsEventListener listener) {
+        // 设置接收输入输出事件监听器
+        receiveIoEventListener = listener;
+    }
+
+    @Override
+    public boolean receiveAsync(IoArgs args) throws IOException {
         // 如果该套接字通道适配器已关闭，则抛出输入输出异常
         if (isClosed.get()) {
             throw new IOException("Current channel is closed!");
         }
 
-        // 设置接收输入输出事件监听器
-        receiveIoEventListener = listener;
+        receiveArgsTemp = args;
 
         // 向输入输出提供者注册输入回调
         return ioProvider.registerInput(channel, inputCallback);

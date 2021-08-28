@@ -70,6 +70,11 @@ public interface IoProvider extends Closeable {
             this.attach = attach;
         }
 
+        @SuppressWarnings("unchecked")
+        public final <T> T getAttach() {
+            return (T) this.attach;
+        }
+
         /**
          * 能够提供输出
          *

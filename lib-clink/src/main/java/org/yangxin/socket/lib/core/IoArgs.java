@@ -86,7 +86,7 @@ public class IoArgs {
     /**
      * 开始写入数据到IoArgs
      */
-    private void startWriting() {
+    public void startWriting() {
         buffer.clear();
         // 定义容纳区间
         buffer.limit(limit);
@@ -95,7 +95,7 @@ public class IoArgs {
     /**
      * 写完数据后调用
      */
-    private void finishWriting() {
+    public void finishWriting() {
         buffer.flip();
     }
 
@@ -106,6 +106,14 @@ public class IoArgs {
      */
     public void limit(int limit) {
         this.limit = limit;
+    }
+
+    public void writeLength(int total) {
+        buffer.putInt(total);
+    }
+
+    public int readLength() {
+        return buffer.getInt();
     }
 
     public String bufferString() {

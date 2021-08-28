@@ -13,11 +13,18 @@ import java.io.IOException;
 public interface Receiver extends Closeable {
 
     /**
+     * 设置接收监听
+     *
+     * @param listener 接收监听
+     */
+    void setReceiveListener(IoArgs.IoArgsEventListener listener);
+
+    /**
      * 异步接收
      *
-     * @param listener 输入输出参数事件监听者
-     * @return 是否异步接收成功
-     * @throws IOException io异常
+     * @param args 输入输出参数
+     * @return 是否接收成功
+     * @throws IOException 输入输出异常
      */
-    boolean receiveAsync(IoArgs.IoArgsEventListener listener) throws IOException;
+    boolean receiveAsync(IoArgs args) throws IOException;
 }
