@@ -1,5 +1,7 @@
 package org.yangxin.socket.lib.core;
 
+import org.yangxin.socket.lib.box.StringReceivePacket;
+import org.yangxin.socket.lib.box.StringSendPacket;
 import org.yangxin.socket.lib.impl.SocketChannelAdapter;
 
 import java.io.Closeable;
@@ -37,6 +39,16 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
     private Receiver receiver;
 
     /**
+     * 发送调度者
+     */
+    private SendDispatcher sendDispatcher;
+
+    /**
+     * 接收调度者
+     */
+    private ReceiveDispatcher receiveDispatcher;
+
+    /**
      * 为当前连接设置一些参数
      *
      * @param channel 通道
@@ -53,24 +65,11 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         // 设置发送者和接收者
         this.sender = adapter;
         this.receiver = adapter;
-
-        // 读取下一条消息
-        readNextMessage();
     }
 
-    /**
-     * 读取下一条消息
-     */
-    private void readNextMessage() {
-        // 如果接收者不为null，则接收者开始异步地接收消息
-        if (receiver != null) {
-            try {
-                // 接收者注册输入输出参数事件回调
-                receiver.receiveAsync(echoReceiveListener);
-            } catch (IOException e) {
-                System.out.println("开始接收数据异常：" + e.getMessage());
-            }
-        }
+    public void send(String msg) {
+        StringSendPacket packet = new StringSendPacket(msg);
+        sendDispatcher.send(packet);
     }
 
     @Override
@@ -83,25 +82,14 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
 
     }
 
-    /**
-     * 回声接收监听器
-     */
-    private final IoArgs.IoArgsEventListener echoReceiveListener = new IoArgs.IoArgsEventListener() {
-
-        @Override
-        public void onStarted(IoArgs args) {
-        }
-
-        @Override
-        public void onCompleted(IoArgs args) {
-            // 打印
-            onReceiveNewMessage(args.bufferString());
-            // 读取下一条数据
-            readNextMessage();
-        }
-    };
-
     protected void onReceiveNewMessage(String str) {
         System.out.println(key + ":" + str);
     }
+
+    private ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = packet -> {
+        if (packet instanceof StringReceivePacket) {
+            String msg = ((StringReceivePacket) packet).string();
+            onReceiveNewMessage(msg);
+        }
+    };
 }

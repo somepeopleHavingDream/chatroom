@@ -1,0 +1,26 @@
+package org.yangxin.socket.lib.core;
+
+/**
+ * 发送数据的调度者，
+ * 缓存所有需要发送的数据，通过队列对数据进行发送，
+ * 并且在发送数据时，实现对数据的基本包装。
+ *
+ * @author yangxin
+ * 2021/8/28 下午1:25
+ */
+public interface SendDispatcher {
+
+    /**
+     * 发送一份数据
+     *
+     * @param packet 数据
+     */
+    void send(SendPacket packet);
+
+    /**
+     * 取消发送数据
+     *
+     * @param packet 数据
+     */
+    void cancel(SendPacket packet);
+}
