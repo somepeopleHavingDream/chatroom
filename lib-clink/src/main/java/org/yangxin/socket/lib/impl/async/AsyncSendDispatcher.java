@@ -20,6 +20,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
     private final Sender sender;
     private final Queue<SendPacket> queue = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean isSending = new AtomicBoolean();
+    private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     private IoArgs ioArgs = new IoArgs();
     private SendPacket packetTemp;
@@ -115,6 +116,14 @@ public class AsyncSendDispatcher implements SendDispatcher {
 
     @Override
     public void close() throws IOException {
+        if (isClosed.compareAndSet(false, true)) {
+            isSending.set(false);
+            SendPacket packet = this.packetTemp;
+            if (packet != null) {
+                packetTemp = null;
+                CloseUtils.close(packet);
+            }
+        }
     }
 
     private final IoArgs.IoArgsEventListener ioArgsEventListener = new IoArgs.IoArgsEventListener() {

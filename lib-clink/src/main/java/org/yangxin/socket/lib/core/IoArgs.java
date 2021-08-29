@@ -116,6 +116,10 @@ public class IoArgs {
         return buffer.getInt();
     }
 
+    public int capacity() {
+        return buffer.capacity();
+    }
+
     public String bufferString() {
         // 丢弃换行符
         return new String(byteBuffer, 0, buffer.position() - 1);
