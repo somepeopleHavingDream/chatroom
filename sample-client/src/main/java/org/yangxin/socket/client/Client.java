@@ -1,6 +1,8 @@
 package org.yangxin.socket.client;
 
 import org.yangxin.socket.client.bean.ServerInfo;
+import org.yangxin.socket.lib.core.IoContext;
+import org.yangxin.socket.lib.impl.IoSelectorProvider;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,7 +16,11 @@ import java.io.InputStreamReader;
 @SuppressWarnings("AlibabaUndefineMagicConstant")
 public class Client {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        IoContext.setup()
+                .ioProvider(new IoSelectorProvider())
+                .start();
+
         ServerInfo info = UdpSearcher.searchServer(10000);
         System.out.println("Server: " + info);
 
@@ -36,6 +42,8 @@ public class Client {
                 }
             }
         }
+
+        IoContext.close();
     }
 
     private static void write(TcpClient client) throws IOException {
@@ -47,6 +55,9 @@ public class Client {
             // 键盘读取一行
             String msg = input.readLine();
             // 发送到服务器
+            client.send(msg);
+            client.send(msg);
+            client.send(msg);
             client.send(msg);
 
             if ("00bye00".equalsIgnoreCase(msg)) {

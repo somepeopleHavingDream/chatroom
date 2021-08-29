@@ -3,6 +3,8 @@ package org.yangxin.socket.lib.core;
 import org.yangxin.socket.lib.box.StringReceivePacket;
 import org.yangxin.socket.lib.box.StringSendPacket;
 import org.yangxin.socket.lib.impl.SocketChannelAdapter;
+import org.yangxin.socket.lib.impl.async.AsyncReceiveDispatcher;
+import org.yangxin.socket.lib.impl.async.AsyncSendDispatcher;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -65,6 +67,12 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         // 设置发送者和接收者
         this.sender = adapter;
         this.receiver = adapter;
+
+        sendDispatcher = new AsyncSendDispatcher(sender);
+        receiveDispatcher = new AsyncReceiveDispatcher(receiver, receivePacketCallback);
+
+        // 启动接收
+        receiveDispatcher.start();
     }
 
     public void send(String msg) {
@@ -74,7 +82,11 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
 
     @Override
     public void close() throws IOException {
-
+        receiveDispatcher.close();
+        sendDispatcher.close();
+        sender.close();
+        receiver.close();
+        channel.close();
     }
 
     @Override
