@@ -55,10 +55,13 @@ public interface IoProvider extends Closeable {
     }
 
     /**
-     * 处理输出回调
+     * 处理输出的回调
      */
     abstract class HandleOutputCallback implements Runnable {
 
+        /**
+         * 需要处理的参数
+         */
         private Object attach;
 
         @Override

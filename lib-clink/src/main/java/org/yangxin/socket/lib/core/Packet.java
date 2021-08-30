@@ -15,12 +15,20 @@ public abstract class Packet implements Closeable {
 
     private byte type;
 
+    /**
+     * 包的长度
+     */
     protected int length;
 
     public byte type() {
         return type;
     }
 
+    /**
+     * 返回包的长度
+     *
+     * @return 包的长度
+     */
     public int length() {
         return length;
     }

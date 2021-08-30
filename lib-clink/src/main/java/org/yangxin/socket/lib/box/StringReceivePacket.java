@@ -15,6 +15,7 @@ public class StringReceivePacket extends ReceivePacket {
 
     public StringReceivePacket(int length) {
         buffer = new byte[length];
+
         this.length = length;
     }
 

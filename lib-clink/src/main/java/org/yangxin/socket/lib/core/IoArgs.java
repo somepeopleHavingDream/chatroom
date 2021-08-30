@@ -87,13 +87,14 @@ public class IoArgs {
      * 开始写入数据到IoArgs
      */
     public void startWriting() {
+        // 清理缓冲
         buffer.clear();
         // 定义容纳区间
         buffer.limit(limit);
     }
 
     /**
-     * 写完数据后调用
+     * 写完数据后调用，用于读写
      */
     public void finishWriting() {
         buffer.flip();

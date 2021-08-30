@@ -68,7 +68,7 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         this.sender = adapter;
         this.receiver = adapter;
 
-        // 设置发送调度者和接收调度者（异步的）
+        // 设置发送调度者和接收调度者（异步的发送调度者和异步的接收调度者）
         sendDispatcher = new AsyncSendDispatcher(sender);
         receiveDispatcher = new AsyncReceiveDispatcher(receiver, receivePacketCallback);
 
@@ -77,7 +77,10 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
     }
 
     public void send(String msg) {
+        // 每次都是实例化一个字符串发送包
         StringSendPacket packet = new StringSendPacket(msg);
+
+        // 然后将该包交给发送调度者来发送
         sendDispatcher.send(packet);
     }
 
@@ -99,9 +102,16 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         System.out.println(key + ":" + str);
     }
 
-    private ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = packet -> {
+    /**
+     * 接收调度者的接收包回调
+     */
+    private final ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = packet -> {
+        // 如果包类型是字符串接收包
         if (packet instanceof StringReceivePacket) {
+            // 转换类型后，获取包中的字符串
             String msg = ((StringReceivePacket) packet).string();
+
+            // 调用当接收到新消息时方法
             onReceiveNewMessage(msg);
         }
     };

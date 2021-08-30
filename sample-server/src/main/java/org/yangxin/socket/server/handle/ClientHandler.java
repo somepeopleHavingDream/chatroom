@@ -18,7 +18,14 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("AlibabaAvoidManuallyCreateThread")
 public class ClientHandler extends Connection {
 
+    /**
+     * 客户端处理者的回调
+     */
     private final ClientHandlerCallback handlerCallback;
+
+    /**
+     * 客户端信息
+     */
     private final String clientInfo;
 
     public ClientHandler(SocketChannel channel, ClientHandlerCallback handlerCallback) throws IOException {
@@ -27,6 +34,8 @@ public class ClientHandler extends Connection {
         this.clientInfo = channel.getRemoteAddress().toString();
 
         System.out.println("新客户端连接：" + clientInfo);
+
+        // 设置一些参数
         setup(channel);
     }
 

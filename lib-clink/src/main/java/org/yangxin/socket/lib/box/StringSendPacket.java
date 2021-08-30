@@ -14,6 +14,8 @@ public class StringSendPacket extends SendPacket {
 
     public StringSendPacket(String msg) {
         this.bytes = msg.getBytes();
+
+        // 此属性来自于Packet
         this.length = bytes.length;
     }
 

@@ -6,6 +6,9 @@
       - AsyncReceiveDispatcher
         - ReceiveDispatcher
           - Closeable
+      - AsyncSendDispatcher
+        - SendDispatcher
+          - Closeable
       - Connection
         - Closeable
         - SocketChannelAdapter.OnChannelStatusChangedListener
@@ -18,6 +21,22 @@
         - Receiver
           - Closeable
         - Cloneable
+    - box
+      - StringSendPacket
+        - SendPacket
+          - Packet
+      - StringReceivePacket
+        - ReceivePacket
+          - Packet
   - sample-client
     - TcpClient
       - Connection
+        - Closeable
+          - SocketChannelAdapter.OnChannelStatusChangedListener
+  - sample-server
+    - ClientHandler
+      - Connection
+        - Closeable
+          - SocketChannelAdapter.OnChannelStatusChangedListener
+    - TcpServer
+      - ClientHandler.ClientHandlerCallback
