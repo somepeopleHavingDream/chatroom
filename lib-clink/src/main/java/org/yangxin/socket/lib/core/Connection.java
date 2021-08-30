@@ -12,7 +12,7 @@ import java.nio.channels.SocketChannel;
 import java.util.UUID;
 
 /**
- * 连接，实现了当通道状态发生改变时的回调。
+ * 连接，实现了当通道状态发生改变时的回调
  *
  * @author yangxin
  * 2021/8/24 11:33
@@ -68,10 +68,11 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         this.sender = adapter;
         this.receiver = adapter;
 
+        // 设置发送调度者和接收调度者（异步的）
         sendDispatcher = new AsyncSendDispatcher(sender);
         receiveDispatcher = new AsyncReceiveDispatcher(receiver, receivePacketCallback);
 
-        // 启动接收
+        // 启动接收调度者（实际就是注册读事件和该事件对应的回调）
         receiveDispatcher.start();
     }
 

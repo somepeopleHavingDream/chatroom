@@ -21,20 +21,24 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
     private final Receiver receiver;
     private final ReceivePacketCallback callback;
 
-    private IoArgs ioArgs = new IoArgs();
+    private final IoArgs ioArgs = new IoArgs();
     private ReceivePacket packetTemp;
     private byte[] buffer;
     private int total;
     private int position;
 
     public AsyncReceiveDispatcher(Receiver receiver, ReceivePacketCallback callback) {
+        // 设置接收者
         this.receiver = receiver;
+        // 设置接收监听器
         this.receiver.setReceiveListener(ioArgsEventListener);
+        // 设置接收包回调
         this.callback = callback;
     }
 
     @Override
     public void start() {
+        // 注册接收
         registerReceive();
     }
 
@@ -49,6 +53,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
 
     private void registerReceive() {
         try {
+            // 异步接收
             receiver.receiveAsync(ioArgs);
         } catch (IOException e) {
             closeAndNotify();

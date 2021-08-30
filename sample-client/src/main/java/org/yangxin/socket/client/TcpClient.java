@@ -1,12 +1,12 @@
 package org.yangxin.socket.client;
 
-import lombok.Setter;
 import org.yangxin.socket.client.bean.ServerInfo;
 import org.yangxin.socket.lib.core.Connection;
 import org.yangxin.socket.lib.utils.CloseUtils;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 
 /**
@@ -17,6 +17,7 @@ import java.nio.channels.SocketChannel;
 public class TcpClient extends Connection {
 
     public TcpClient(SocketChannel socketChannel) throws IOException {
+        // 设置一些参数
         setup(socketChannel);
     }
 

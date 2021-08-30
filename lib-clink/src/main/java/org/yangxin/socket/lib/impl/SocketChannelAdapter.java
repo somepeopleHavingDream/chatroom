@@ -49,6 +49,9 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
      */
     private IoArgs.IoArgsEventListener sendIoEventListener;
 
+    /**
+     * 临时的用于接收的输入输出参数
+     */
     private IoArgs receiveArgsTemp;
 
     public SocketChannelAdapter(SocketChannel channel, IoProvider ioProvider, OnChannelStatusChangedListener listener) throws IOException {

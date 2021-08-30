@@ -107,8 +107,6 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
 
     @Override
     public void onNewMessageArrived(ClientHandler handler, String msg) {
-        // 打印到屏幕
-        System.out.println("Received-" + handler.getClientInfo() + ":" + msg);
         // 异步提交转发任务
         forwardingExecutor.execute(() -> {
             synchronized (TcpServer.this) {
@@ -135,6 +133,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
 
         @Override
         public void run() {
+            // 该选择器用于监听客户端接入事件
             Selector selector = TcpServer.this.selector;
             System.out.println("服务器准备就绪~");
 

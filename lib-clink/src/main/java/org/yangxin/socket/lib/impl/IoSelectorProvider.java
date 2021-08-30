@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author yangxin
  * 2021/8/24 下午8:09
  */
-@SuppressWarnings({"AlibabaThreadPoolCreation", "AlibabaAvoidManuallyCreateThread"})
+@SuppressWarnings({"AlibabaThreadPoolCreation", "AlibabaAvoidManuallyCreateThread", "SynchronizationOnLocalVariableOrMethodParameter"})
 public class IoSelectorProvider implements IoProvider {
 
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
@@ -75,10 +75,12 @@ public class IoSelectorProvider implements IoProvider {
 
             @Override
             public void run() {
+                // 如果当前输入输出选择器提供者未关闭
                 while (!isClosed.get()) {
                     try {
                         // 如果读选择器没有就绪事件，则等待选择
                         if (readSelector.select() == 0) {
+                            // 等待选择
                             waitSelection(isRegInput);
                             continue;
                         }
@@ -92,7 +94,7 @@ public class IoSelectorProvider implements IoProvider {
                             }
                         }
 
-                        // 清除所有已被处理的就绪事件
+                        // 清除所有已被处理的选择键
                         set.clear();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -182,6 +184,7 @@ public class IoSelectorProvider implements IoProvider {
      */
     private void waitSelection(AtomicBoolean locker) {
         synchronized (locker) {
+            // 如果处于注册输入过程或处于注册输出过程，则等待线程通知该过程结束
             if (locker.get()) {
                 try {
                     locker.wait();

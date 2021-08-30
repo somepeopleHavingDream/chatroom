@@ -22,7 +22,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
     private final AtomicBoolean isSending = new AtomicBoolean();
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
-    private IoArgs ioArgs = new IoArgs();
+    private final IoArgs ioArgs = new IoArgs();
     private SendPacket packetTemp;
 
     /**
@@ -36,6 +36,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
     private int position;
 
     public AsyncSendDispatcher(Sender sender) {
+        // 设置发送者
         this.sender = sender;
     }
 
