@@ -50,7 +50,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
         // 设置接收者
         this.receiver = receiver;
 
-        // 设置接收监听器
+        // 设置接收监听器（用于处理IoArgs）
         this.receiver.setReceiveListener(ioArgsEventListener);
         // 设置接收包回调
         this.callback = callback;
@@ -142,6 +142,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
 
             // 实例化字符串接收包
             packetTemp = new StringReceivePacket(length);
+
             buffer = new byte[length];
             total = length;
             position = 0;

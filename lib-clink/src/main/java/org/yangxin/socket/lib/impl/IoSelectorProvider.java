@@ -128,6 +128,9 @@ public class IoSelectorProvider implements IoProvider {
                                 handleSelection(key, SelectionKey.OP_WRITE, outputCallbackMap, outputHandlePool);
                             }
                         }
+
+                        // 清除所有已被处理的选择键
+                        set.clear();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

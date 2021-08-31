@@ -57,8 +57,8 @@ public class Client {
             // 发送到服务器
             client.send(msg);
             client.send(msg);
-//            client.send(msg);
-//            client.send(msg);
+            client.send(msg);
+            client.send(msg);
 
             if ("00bye00".equalsIgnoreCase(msg)) {
                 break;

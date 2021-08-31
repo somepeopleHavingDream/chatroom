@@ -30,6 +30,8 @@
         - Receiver
           - Closeable
         - Cloneable
+      - IoSelectorProvider
+        - IoProvider
     - box
       - StringSendPacket
         - SendPacket
