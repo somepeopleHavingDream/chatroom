@@ -15,9 +15,18 @@
       - IoSelectorProvider
         - IoProvider
           - Closeable
+      - SendPacket
+        - Packet
+      - ReceivePacket
+        - Packet
+      - Sender
+        - Closeable
+      - Receiver
+        - Closeable
     - impl
       - SocketChannelAdapter
         - Sender
+          - Closeable
         - Receiver
           - Closeable
         - Cloneable

@@ -11,8 +11,19 @@ import java.nio.channels.SocketChannel;
  */
 public class IoArgs {
 
+    /**
+     * 初始容量为256个字节
+     */
     private int limit = 256;
+
+    /**
+     * 底层字节缓冲
+     */
     private final byte[] byteBuffer = new byte[256];
+
+    /**
+     * 底层字节缓冲实例
+     */
     private final ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
 
     /**

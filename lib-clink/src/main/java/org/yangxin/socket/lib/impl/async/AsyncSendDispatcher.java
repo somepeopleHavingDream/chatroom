@@ -52,7 +52,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
         // 将发送包入队
         queue.offer(packet);
 
-        // 设置发送状态，并实际地发送下一个包
+        // 设置发送状态，并实际地发送下一个包（isSending状态在发送完一个包后未关闭）
         if (isSending.compareAndSet(false, true)) {
             sendNextPacket();
         }
@@ -96,7 +96,9 @@ public class AsyncSendDispatcher implements SendDispatcher {
             return;
         }
 
+        // 当前发送包的总字节数
         total = packet.length();
+        // 当前包发送到第几个字节
         position = 0;
 
         // 发送当前包
@@ -125,7 +127,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
         // 把bytes的数据写入到IoArgs
         int count = args.readFrom(bytes, position);
 
-        // 更新当前位置
+        // 更新当前发送的字节位置
         position += count;
 
         // 完成封装

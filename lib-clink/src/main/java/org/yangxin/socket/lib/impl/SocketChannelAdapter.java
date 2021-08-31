@@ -154,6 +154,7 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
             throw new IOException("Current channel is closed!");
         }
 
+        // 发送的输入输出事件监听器
         sendIoEventListener = listener;
 
         // 当前发送的数据附加到回调中
