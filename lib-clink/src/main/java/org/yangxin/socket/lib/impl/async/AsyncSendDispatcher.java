@@ -123,6 +123,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
             args.writeLength(total);
         }
 
+        // 将包转换成字节数组，再转换成IoArgs
         byte[] bytes = packetTemp.bytes();
         // 把bytes的数据写入到IoArgs
         int count = args.readFrom(bytes, position);
