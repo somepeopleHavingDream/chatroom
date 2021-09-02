@@ -3,6 +3,7 @@ package org.yangxin.socket.lib.core;
 import lombok.Getter;
 
 import java.io.Closeable;
+import java.io.IOException;
 
 /**
  * 公共数据的封装，
@@ -11,14 +12,16 @@ import java.io.Closeable;
  * @author yangxin
  * 2021/8/28 下午1:06
  */
-public abstract class Packet implements Closeable {
+public abstract class Packet<T extends Closeable> implements Closeable {
 
     private byte type;
 
     /**
      * 包的长度
      */
-    protected int length;
+    protected long length;
+
+    private T stream;
 
     public byte type() {
         return type;
@@ -29,7 +32,28 @@ public abstract class Packet implements Closeable {
      *
      * @return 包的长度
      */
-    public int length() {
+    public long length() {
         return length;
+    }
+
+    public final T open() {
+        if (stream == null) {
+            stream = createStream();
+        }
+        return stream;
+    }
+
+    @Override
+    public final void close() throws IOException {
+        if (stream != null) {
+            closeStream(stream);
+            stream = null;
+        }
+    }
+
+    protected abstract T createStream();
+
+    protected void closeStream(T stream) throws IOException {
+        stream.close();
     }
 }
