@@ -8,13 +8,15 @@ import org.yangxin.socket.lib.core.Receiver;
 import org.yangxin.socket.lib.utils.CloseUtils;
 
 import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author yangxin
  * 2021/8/29 下午2:39
  */
-public class AsyncReceiveDispatcher implements ReceiveDispatcher {
+public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsEventProcessor {
 
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
@@ -29,29 +31,26 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
     /**
      * 临时的接收包
      */
-    private ReceivePacket packetTemp;
+    private ReceivePacket<?> packetTemp;
 
-    /**
-     * 用于接收数据的字节数组
-     */
-    private byte[] buffer;
+    private WritableByteChannel packetChannel;
 
     /**
      * 总共需要接收多少个字节
      */
-    private int total;
+    private long total;
 
     /**
      * 当前接收到第几个字节
      */
-    private int position;
+    private long position;
 
     public AsyncReceiveDispatcher(Receiver receiver, ReceivePacketCallback callback) {
         // 设置接收者
         this.receiver = receiver;
 
         // 设置接收监听器（用于处理IoArgs）
-        this.receiver.setReceiveListener(ioArgsEventListener);
+        this.receiver.setReceiveListener(this);
         // 设置接收包回调
         this.callback = callback;
     }
@@ -67,6 +66,13 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
 
     }
 
+    @Override
+    public void close() throws IOException {
+        if (isClosed.compareAndSet(false, true)) {
+            completePacket(false);
+        }
+    }
+
     private void closeAndNotify() {
         CloseUtils.close(this);
     }
@@ -74,60 +80,30 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
     private void registerReceive() {
         try {
             // 异步接收
-            receiver.postReceiveAsync(ioArgs);
+            receiver.postReceiveAsync();
         } catch (IOException e) {
             closeAndNotify();
-        }
-    }
-
-    @Override
-    public void close() throws IOException {
-        if (isClosed.compareAndSet(false, true)) {
-            ReceivePacket packet = packetTemp;
-            if (packet != null) {
-                packetTemp = null;
-                CloseUtils.close(packet);
-            }
         }
     }
 
     /**
      * 完成数据接收操作
      */
-    private void completePacket() {
+    private void completePacket(boolean isSucceed) {
         // 关闭此临时接收包
         ReceivePacket packet = this.packetTemp;
         CloseUtils.close(packet);
+        packetTemp = null;
+
+        WritableByteChannel channel = this.packetChannel;
+        CloseUtils.close(channel);
+        packetChannel = null;
 
         // 调用回调的完整接收包方法
-        callback.onReceivePacketCompleted(packet);
+        if (packet != null) {
+            callback.onReceivePacketCompleted(packet);
+        }
     }
-
-    private final IoArgs.IoArgsEventListener ioArgsEventListener = new IoArgs.IoArgsEventListener() {
-
-        @Override
-        public void onStarted(IoArgs args) {
-            // 取得此次接收的字节大小
-            int receiveSize;
-            if (packetTemp == null) {
-                receiveSize = 4;
-            } else {
-                receiveSize = Math.min(total - position, args.capacity());
-            }
-
-            // 设置本次接收数据大小
-            args.limit(receiveSize);
-        }
-
-        @Override
-        public void onCompleted(IoArgs args) {
-            // 从入参输入输出参数中解析组装成包
-            assemblePacket(args);
-
-            // 继续接收下一条数据
-            registerReceive();
-        }
-    };
 
     /**
      * 解析数据到Packet
@@ -142,26 +118,53 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
 
             // 实例化字符串接收包
             packetTemp = new StringReceivePacket(length);
+            packetChannel = Channels.newChannel(packetTemp.open());
 
-            buffer = new byte[length];
             total = length;
             position = 0;
         }
 
         // 将接收到的数据从入参输入输出参数，写到当前底层字节缓冲区中
-        int count = args.writeTo(buffer, 0);
-        if (count > 0) {
-            // 保存到接收包实例的底层缓冲数组中
-            packetTemp.save(buffer, count);
-            // 更新当前接收进度
+        try {
+            int count = args.writeTo(packetChannel);
             position += count;
 
             // 检查是否已完成一份Packet的接收
             if (position == total) {
                 // 如果当前接收进度到达重点，则完成调用完成包方法，并置临时接收包的引用为null
-                completePacket();
-                packetTemp = null;
+                completePacket(true);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            completePacket(false);
         }
+    }
+
+    @Override
+    public IoArgs provideIoArgs() {
+        IoArgs args = ioArgs;
+
+        int receiveSize;
+        if (packetTemp == null) {
+            receiveSize = 4;
+        } else {
+            receiveSize = (int) Math.min(total - position, args.capacity());
+        }
+
+        // 设置本次接收数据大小
+        args.limit(receiveSize);
+
+        return args;
+    }
+
+    @Override
+    public void onConsumeFailed(IoArgs args, Exception e) {
+        e.printStackTrace();
+    }
+
+    @Override
+    public void onConsumeCompleted(IoArgs args) {
+        assemblePacket(args);
+        registerReceive();
     }
 }
