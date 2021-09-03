@@ -7,15 +7,16 @@ import java.io.IOException;
  * @author yangxin
  * 2021/8/24 11:34
  */
+@SuppressWarnings("unused")
 public interface Sender extends Closeable {
+
+    void setSendListener(IoArgs.IoArgsEventProcessor processor);
 
     /**
      * 异步发送
      *
-     * @param args io参数
-     * @param listener io参数事件监听者
      * @return 是否异步发送成功
      * @throws IOException io异常
      */
-    boolean sendAsync(IoArgs args, IoArgs.IoArgsEventListener listener) throws IOException;
+    boolean postSendAsync() throws IOException;
 }

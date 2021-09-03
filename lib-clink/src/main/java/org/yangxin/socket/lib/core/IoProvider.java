@@ -44,7 +44,7 @@ public interface IoProvider extends Closeable {
     abstract class HandleInputCallback implements Runnable {
 
         @Override
-        public void run() {
+        public final void run() {
             canProviderInput();
         }
 
@@ -59,30 +59,14 @@ public interface IoProvider extends Closeable {
      */
     abstract class HandleOutputCallback implements Runnable {
 
-        /**
-         * 需要处理的参数
-         */
-        private Object attach;
-
         @Override
-        public void run() {
-            canProviderOutput(attach);
-        }
-
-        public final void setAttach(Object attach) {
-            this.attach = attach;
-        }
-
-        @SuppressWarnings("unchecked")
-        public final <T> T getAttach() {
-            return (T) this.attach;
+        public final void run() {
+            canProviderOutput();
         }
 
         /**
          * 能够提供输出
-         *
-         * @param attach 附加信息
          */
-        protected abstract void canProviderOutput(Object attach);
+        protected abstract void canProviderOutput();
     }
 }

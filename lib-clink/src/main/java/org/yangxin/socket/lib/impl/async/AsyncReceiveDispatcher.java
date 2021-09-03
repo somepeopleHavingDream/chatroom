@@ -74,7 +74,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
     private void registerReceive() {
         try {
             // 异步接收
-            receiver.receiveAsync(ioArgs);
+            receiver.postReceiveAsync(ioArgs);
         } catch (IOException e) {
             closeAndNotify();
         }

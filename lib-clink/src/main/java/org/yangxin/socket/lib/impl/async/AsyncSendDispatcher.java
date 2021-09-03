@@ -136,7 +136,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
 
         try {
             // 异步发送（提供了一个回调，最终交给写线程池执行）
-            sender.sendAsync(args, ioArgsEventListener);
+            sender.postSendAsync(args, ioArgsEventListener);
         } catch (IOException e) {
             closeAndNotify();
         }

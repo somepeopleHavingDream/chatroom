@@ -3,12 +3,15 @@ package org.yangxin.socket.lib.core;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.WritableByteChannel;
 
 /**
  * @author yangxin
  * 2021/8/24 11:35
  */
+@SuppressWarnings("DuplicatedCode")
 public class IoArgs {
 
     /**
@@ -17,39 +20,42 @@ public class IoArgs {
     private int limit = 256;
 
     /**
-     * 底层字节缓冲
-     */
-    private final byte[] byteBuffer = new byte[256];
-
-    /**
      * 底层字节缓冲实例
      */
-    private final ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
+    private final ByteBuffer buffer = ByteBuffer.allocate(limit);
 
     /**
      * 从bytes中读取数据
-     *
-     * @param bytes 字节数组
-     * @param offset 起始偏移
-     * @return 读了多少个字节
      */
-    public int readFrom(byte[] bytes, int offset) {
-        int size = Math.min(bytes.length - offset, buffer.remaining());
-        buffer.put(bytes, offset, size);
-        return size;
+    public int readFrom(ReadableByteChannel channel) throws IOException {
+        startWriting();
+
+        int bytes = 0;
+        while (buffer.hasRemaining()) {
+            int length = channel.read(buffer);
+            if (length < 0) {
+                throw new EOFException();
+            }
+            bytes += length;
+        }
+
+        finishWriting();
+        return bytes;
     }
 
     /**
      * 写数据到bytes中
-     *
-     * @param bytes 字节数组
-     * @param offset 起始偏移
-     * @return 写入了多少个字节
      */
-    public int writeTo(byte[] bytes, int offset) {
-        int size = Math.min(bytes.length - offset, buffer.remaining());
-        buffer.get(bytes, offset, size);
-        return size;
+    public int writeTo(WritableByteChannel channel) throws IOException {
+        int bytes = 0;
+        while (buffer.hasRemaining()) {
+            int length = channel.write(buffer);
+            if (length < 0) {
+                throw new EOFException();
+            }
+            bytes += length;
+        }
+        return bytes;
     }
 
     /**
@@ -121,7 +127,9 @@ public class IoArgs {
     }
 
     public void writeLength(int total) {
+        startWriting();
         buffer.putInt(total);
+        finishWriting();
     }
 
     public int readLength() {
@@ -132,25 +140,32 @@ public class IoArgs {
         return buffer.capacity();
     }
 
-    public String bufferString() {
-        // 丢弃换行符
-        return new String(byteBuffer, 0, buffer.position() - 1);
-    }
-
-    public interface IoArgsEventListener {
-
-        /**
-         * 启动时
-         *
-         * @param args io参数
-         */
-        void onStarted(IoArgs args);
+    /**
+     * IoArgs提供者、处理者；
+     * 数据的生产或消费者
+     */
+    public interface IoArgsEventProcessor {
 
         /**
-         * 完成时
+         * 提供一份可消费的IoArgs
          *
-         * @param args io参数
+         * @return IoArgs
          */
-        void onCompleted(IoArgs args);
+        IoArgs provideIoArgs();
+
+        /**
+         * 消费失败时回调
+         *
+         * @param args IoArgs
+         * @param e 异常信息
+         */
+        void onConsumeFailed(IoArgs args, Exception e);
+
+        /**
+         * 消费成功
+         *
+         * @param args IoArgs
+         */
+        void onConsumeCompleted(IoArgs args);
     }
 }

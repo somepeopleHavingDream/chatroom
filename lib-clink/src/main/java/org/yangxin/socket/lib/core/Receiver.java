@@ -15,16 +15,15 @@ public interface Receiver extends Closeable {
     /**
      * 设置接收监听
      *
-     * @param listener 接收监听
+     * @param processor 接收监听
      */
-    void setReceiveListener(IoArgs.IoArgsEventListener listener);
+    void setReceiveListener(IoArgs.IoArgsEventProcessor processor);
 
     /**
      * 异步接收
      *
-     * @param args 输入输出参数
      * @return 是否接收成功
      * @throws IOException 输入输出异常
      */
-    boolean receiveAsync(IoArgs args) throws IOException;
+    boolean postReceiveAsync() throws IOException;
 }
