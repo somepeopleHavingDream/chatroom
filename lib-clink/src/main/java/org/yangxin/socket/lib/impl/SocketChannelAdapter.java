@@ -83,7 +83,6 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
             throw new IOException("Current channel is closed!");
         }
 
-        // 当前发送的数据附加到回调中
         return ioProvider.registerOutput(channel, outputCallback);
     }
 
@@ -141,15 +140,18 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
                 return;
             }
 
+            // 获得发送输入输出事件处理器
             IoArgs.IoArgsEventProcessor processor = sendIoEventProcessor;
+            // 从输入输出事件处理器中拿到输入输出参数
             IoArgs args = processor.provideIoArgs();
 
             try {
                 // 具体的写操作
                 if (args.writeTo(channel) > 0) {
-                    // 读取完成回调
+                    // 消费完成时回调
                     processor.onConsumeCompleted(args);
                 } else {
+                    // 消费失败时回调
                     processor.onConsumeFailed(args, new IOException("Cannot write any data!"));
                 }
             } catch (IOException e) {

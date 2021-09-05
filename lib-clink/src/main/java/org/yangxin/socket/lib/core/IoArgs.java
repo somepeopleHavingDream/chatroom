@@ -25,13 +25,15 @@ public class IoArgs {
     private final ByteBuffer buffer = ByteBuffer.allocate(limit);
 
     /**
-     * 从bytes中读取数据
+     * 从可读字节通道中读取数据
      */
     public int readFrom(ReadableByteChannel channel) throws IOException {
+        // 开始写数据到底层缓冲
         startWriting();
 
         int bytes = 0;
         while (buffer.hasRemaining()) {
+            // 从通道中读取字节到底层缓冲
             int length = channel.read(buffer);
             if (length < 0) {
                 throw new EOFException();
@@ -39,7 +41,10 @@ public class IoArgs {
             bytes += length;
         }
 
+        // 结束写数据到底层缓冲
         finishWriting();
+
+        // 返回写入了多少个字节
         return bytes;
     }
 
@@ -89,15 +94,15 @@ public class IoArgs {
      * @throws IOException 输入输出异常
      */
     public int writeTo(SocketChannel channel) throws IOException {
-        int bytesConsumed = 0;
+        int bytes = 0;
         while (buffer.hasRemaining()) {
             int length = channel.write(buffer);
             if (length < 0) {
                 throw new EOFException();
             }
-            bytesConsumed += length;
+            bytes += length;
         }
-        return bytesConsumed;
+        return bytes;
     }
 
     /**
@@ -114,6 +119,7 @@ public class IoArgs {
      * 写完数据后调用，用于读写
      */
     public void finishWriting() {
+        // 缓冲区翻转
         buffer.flip();
     }
 
@@ -127,8 +133,13 @@ public class IoArgs {
     }
 
     public void writeLength(int total) {
+        // 开始写
         startWriting();
+
+        // 放入长度
         buffer.putInt(total);
+
+        // 结束写
         finishWriting();
     }
 
@@ -147,14 +158,14 @@ public class IoArgs {
     public interface IoArgsEventProcessor {
 
         /**
-         * 提供一份可消费的IoArgs
+         * 提供一份可消费的输入输出参数
          *
          * @return IoArgs
          */
         IoArgs provideIoArgs();
 
         /**
-         * 消费失败时回调
+         * 消费失败时的回调
          *
          * @param args IoArgs
          * @param e 异常信息
@@ -162,7 +173,7 @@ public class IoArgs {
         void onConsumeFailed(IoArgs args, Exception e);
 
         /**
-         * 消费成功
+         * 消费成功的回调
          *
          * @param args IoArgs
          */

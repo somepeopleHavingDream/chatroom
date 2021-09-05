@@ -21,6 +21,9 @@ public abstract class Packet<T extends Closeable> implements Closeable {
      */
     protected long length;
 
+    /**
+     * 流
+     */
     private T stream;
 
     public byte type() {
@@ -36,10 +39,18 @@ public abstract class Packet<T extends Closeable> implements Closeable {
         return length;
     }
 
+    /**
+     * 打开一个流
+     *
+     * @return 流
+     */
     public final T open() {
         if (stream == null) {
+            // 如果流为null，则创建一个流
             stream = createStream();
         }
+
+        // 返回流
         return stream;
     }
 
@@ -51,6 +62,11 @@ public abstract class Packet<T extends Closeable> implements Closeable {
         }
     }
 
+    /**
+     * 创建一个流
+     *
+     * @return 流
+     */
     protected abstract T createStream();
 
     protected void closeStream(T stream) throws IOException {

@@ -6,9 +6,11 @@
       - AsyncReceiveDispatcher
         - ReceiveDispatcher
           - Closeable
+        - IoArgs.IoArgsEventProcessor
       - AsyncSendDispatcher
         - SendDispatcher
           - Closeable
+        - IoArgs.IoArgsEventProcessor
       - Connection
         - Closeable
         - SocketChannelAdapter.OnChannelStatusChangedListener

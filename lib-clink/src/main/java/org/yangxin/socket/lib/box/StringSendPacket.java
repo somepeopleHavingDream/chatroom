@@ -18,12 +18,13 @@ public class StringSendPacket extends SendPacket<ByteArrayInputStream> {
     public StringSendPacket(String msg) {
         this.bytes = msg.getBytes();
 
-        // 此属性来自于Packet
+        // 此length属性来自于Packet
         this.length = bytes.length;
     }
 
     @Override
     protected ByteArrayInputStream createStream() {
+        // 实例化并返回字节数组输入流
         return new ByteArrayInputStream(bytes);
     }
 }

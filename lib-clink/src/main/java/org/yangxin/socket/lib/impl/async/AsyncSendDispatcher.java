@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventProcessor {
 
     private final Sender sender;
-    private final Queue<SendPacket> queue = new ConcurrentLinkedQueue<>();
+    private final Queue<SendPacket<?>> queue = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean isSending = new AtomicBoolean();
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
@@ -34,7 +34,10 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
      */
     private SendPacket<?> packetTemp;
 
-    private ReadableByteChannel packetChannel;
+    /**
+     * 包通道
+     */
+    private ReadableByteChannel readablePacketChannel;
 
     /**
      * 当前发送的packet的大小
@@ -53,7 +56,7 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
     }
 
     @Override
-    public void send(SendPacket packet) {
+    public void send(SendPacket<?> packet) {
         // 将发送包入队
         queue.offer(packet);
 
@@ -64,7 +67,7 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
     }
 
     @Override
-    public void cancel(SendPacket packet) {
+    public void cancel(SendPacket<?> packet) {
 
     }
 
@@ -73,9 +76,9 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
      *
      * @return 发送包
      */
-    private SendPacket takePacket() {
+    private SendPacket<?> takePacket() {
         // 从发送队列中取出一个发送包
-        SendPacket packet = queue.poll();
+        SendPacket<?> packet = queue.poll();
         if (packet != null && packet.isCanceled()) {
             // 已取消，不用发送
             return takePacket();
@@ -87,13 +90,13 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
 
     private void sendNextPacket() {
         // 如果上一个发送包因为某些原因未被发送完，则关闭上一个包
-        SendPacket temp = packetTemp;
+        SendPacket<?> temp = packetTemp;
         if (temp != null) {
             CloseUtils.close(temp);
         }
 
         // 取出一个发送包
-        SendPacket packet = takePacket();
+        SendPacket<?> packet = takePacket();
         packetTemp = packet;
         if (packet == null) {
             // 队列为空，取消状态发送，然后返回
@@ -133,16 +136,16 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
      * @param isSucceed 是否成功
      */
     private void completePacket(boolean isSucceed) {
-        SendPacket packet = this.packetTemp;
+        SendPacket<?> packet = this.packetTemp;
         if (packet == null) {
             return;
         }
 
         CloseUtils.close(packet);
-        CloseUtils.close(packetChannel);
+        CloseUtils.close(readablePacketChannel);
 
         packetTemp = null;
-        packetChannel = null;
+        readablePacketChannel = null;
         total = 0;
         position = 0;
     }
@@ -162,16 +165,23 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
 
     @Override
     public IoArgs provideIoArgs() {
+        // 拿到输入输出参数
         IoArgs args = ioArgs;
-        if (packetChannel == null) {
-            packetChannel = Channels.newChannel(packetTemp.open());
+
+        if (readablePacketChannel == null) {
+            // 如果通道为null，则获取一个新的通道
+            readablePacketChannel = Channels.newChannel(packetTemp.open());
+
+            // 写入长度
             args.limit(4);
             args.writeLength((int) packetTemp.length());
         } else {
+            // 如果通道不为null
             args.limit((int) Math.min(args.capacity(), total - position));
 
             try {
-                int count = args.readFrom(packetChannel);
+                // 将可读通道中的数据写入到输入输出参数中，并且更新当前处理包的进度
+                int count = args.readFrom(readablePacketChannel);
                 position += count;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -179,6 +189,7 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
             }
         }
 
+        // 返回输入输出参数
         return args;
     }
 

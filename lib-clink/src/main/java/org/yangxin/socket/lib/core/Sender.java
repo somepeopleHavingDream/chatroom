@@ -7,9 +7,14 @@ import java.io.IOException;
  * @author yangxin
  * 2021/8/24 11:34
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface Sender extends Closeable {
 
+    /**
+     * 设置发送监听
+     *
+     * @param processor 输入输出参数事件处理器
+     */
     void setSendListener(IoArgs.IoArgsEventProcessor processor);
 
     /**

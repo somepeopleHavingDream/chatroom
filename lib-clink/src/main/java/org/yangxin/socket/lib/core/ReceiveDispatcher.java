@@ -28,6 +28,6 @@ public interface ReceiveDispatcher extends Closeable {
          *
          * @param packet 接收到的包
          */
-        void onReceivePacketCompleted(ReceivePacket packet);
+        void onReceivePacketCompleted(ReceivePacket<?> packet);
     }
 }

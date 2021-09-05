@@ -33,7 +33,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
      */
     private ReceivePacket<?> packetTemp;
 
-    private WritableByteChannel packetChannel;
+    private WritableByteChannel writablePacketChannel;
 
     /**
      * 总共需要接收多少个字节
@@ -91,13 +91,13 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
      */
     private void completePacket(boolean isSucceed) {
         // 关闭此临时接收包
-        ReceivePacket packet = this.packetTemp;
+        ReceivePacket<?> packet = this.packetTemp;
         CloseUtils.close(packet);
         packetTemp = null;
 
-        WritableByteChannel channel = this.packetChannel;
+        WritableByteChannel channel = this.writablePacketChannel;
         CloseUtils.close(channel);
-        packetChannel = null;
+        writablePacketChannel = null;
 
         // 调用回调的完整接收包方法
         if (packet != null) {
@@ -118,7 +118,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
 
             // 实例化字符串接收包
             packetTemp = new StringReceivePacket(length);
-            packetChannel = Channels.newChannel(packetTemp.open());
+            writablePacketChannel = Channels.newChannel(packetTemp.open());
 
             total = length;
             position = 0;
@@ -126,7 +126,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
 
         // 将接收到的数据从入参输入输出参数，写到当前底层字节缓冲区中
         try {
-            int count = args.writeTo(packetChannel);
+            int count = args.writeTo(writablePacketChannel);
             position += count;
 
             // 检查是否已完成一份Packet的接收
@@ -146,6 +146,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
 
         int receiveSize;
         if (packetTemp == null) {
+            // 如果当前接收的包为null，说明即将要接收了一个新包，先读取包长度
             receiveSize = 4;
         } else {
             receiveSize = (int) Math.min(total - position, args.capacity());
