@@ -31,7 +31,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
     /**
      * 临时的接收包
      */
-    private ReceivePacket<?> packetTemp;
+    private ReceivePacket<?, ?> packetTemp;
 
     private WritableByteChannel writablePacketChannel;
 
@@ -91,7 +91,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
      */
     private void completePacket(boolean isSucceed) {
         // 关闭此临时接收包
-        ReceivePacket<?> packet = this.packetTemp;
+        ReceivePacket<?, ?> packet = this.packetTemp;
         CloseUtils.close(packet);
         packetTemp = null;
 

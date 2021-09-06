@@ -8,23 +8,24 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
+ * 字符串发送包
+ *
  * @author yangxin
  * 2021/8/28 下午1:16
  */
-public class StringSendPacket extends SendPacket<ByteArrayInputStream> {
+public class StringSendPacket extends BytesSendPacket {
 
-    private final byte[] bytes;
-
+    /**
+     * 字符串发送时就是Byte数组，所以直接得到Byte数组，并按照Byte的发送方式发送即可。
+     *
+     * @param msg 字符串
+     */
     public StringSendPacket(String msg) {
-        this.bytes = msg.getBytes();
-
-        // 此length属性来自于Packet
-        this.length = bytes.length;
+        super(msg.getBytes());
     }
 
     @Override
-    protected ByteArrayInputStream createStream() {
-        // 实例化并返回字节数组输入流
-        return new ByteArrayInputStream(bytes);
+    public byte type() {
+        return TYPE_MEMORY_STRING;
     }
 }

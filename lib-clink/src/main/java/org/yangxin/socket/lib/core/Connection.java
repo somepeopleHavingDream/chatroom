@@ -102,17 +102,12 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         System.out.println(key + ":" + str);
     }
 
+    protected void onReceivePacket(ReceivePacket<?, ?> packet) {
+        System.out.println(key + ":[New Packet]-Type:" + packet.type() + ",Length:" + packet.length());
+    }
+
     /**
      * 接收调度者的接收包回调
      */
-    private final ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = packet -> {
-        // 如果包类型是字符串接收包
-        if (packet instanceof StringReceivePacket) {
-            // 转换类型后，获取包中的字符串
-            String msg = ((StringReceivePacket) packet).string();
-
-            // 调用当接收到新消息时方法
-            onReceiveNewMessage(msg);
-        }
-    };
+    private final ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = this::onReceivePacket;
 }
