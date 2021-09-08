@@ -24,6 +24,15 @@ public interface ReceiveDispatcher extends Closeable {
     interface ReceivePacketCallback {
 
         /**
+         * 当到达时，实例化一个新包
+         *
+         * @param type 包类型
+         * @param length 包长渡
+         * @return 新包
+         */
+        ReceivePacket<?, ?> onArrivedNewPacket(byte type, long length);
+
+        /**
          * 都接收包完成时
          *
          * @param packet 接收到的包

@@ -1,5 +1,7 @@
 package org.yangxin.socket.lib.core;
 
+import org.yangxin.socket.lib.box.BytesReceivePacket;
+import org.yangxin.socket.lib.box.FileReceivePacket;
 import org.yangxin.socket.lib.box.StringReceivePacket;
 import org.yangxin.socket.lib.box.StringSendPacket;
 import org.yangxin.socket.lib.impl.SocketChannelAdapter;
@@ -7,6 +9,7 @@ import org.yangxin.socket.lib.impl.async.AsyncReceiveDispatcher;
 import org.yangxin.socket.lib.impl.async.AsyncSendDispatcher;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.UUID;
@@ -17,13 +20,13 @@ import java.util.UUID;
  * @author yangxin
  * 2021/8/24 11:33
  */
-@SuppressWarnings("FieldCanBeLocal")
-public class Connection implements Closeable, SocketChannelAdapter.OnChannelStatusChangedListener {
+@SuppressWarnings({"FieldCanBeLocal", "DuplicateBranchesInSwitch"})
+public abstract class Connection implements Closeable, SocketChannelAdapter.OnChannelStatusChangedListener {
 
     /**
      * 该连接的唯一标识
      */
-    private final UUID key = UUID.randomUUID();
+    protected final UUID key = UUID.randomUUID();
 
     /**
      * 该连接对应的通道
@@ -84,6 +87,10 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         sendDispatcher.send(packet);
     }
 
+    public void send(SendPacket<?> packet) {
+        sendDispatcher.send(packet);
+    }
+
     @Override
     public void close() throws IOException {
         receiveDispatcher.close();
@@ -102,12 +109,41 @@ public class Connection implements Closeable, SocketChannelAdapter.OnChannelStat
         System.out.println(key + ":" + str);
     }
 
-    protected void onReceivePacket(ReceivePacket<?, ?> packet) {
+    protected void onReceivedPacket(ReceivePacket<?, ?> packet) {
         System.out.println(key + ":[New Packet]-Type:" + packet.type() + ",Length:" + packet.length());
     }
 
     /**
+     * 创建新的接收文件
+     *
+     * @return 新的文件
+     */
+    protected abstract File createNewReceiveFile();
+
+    /**
      * 接收调度者的接收包回调
      */
-    private final ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = this::onReceivePacket;
+    private final ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = new ReceiveDispatcher.ReceivePacketCallback() {
+
+        @Override
+        public ReceivePacket<?, ?> onArrivedNewPacket(byte type, long length) {
+            switch (type) {
+                case Packet.TYPE_MEMORY_BYTES:
+                    return new BytesReceivePacket(length);
+                case Packet.TYPE_MEMORY_STRING:
+                    return new StringReceivePacket(length);
+                case Packet.TYPE_STREAM_FILE:
+                    return new FileReceivePacket(length, createNewReceiveFile());
+                case Packet.TYPE_STREAM_DIRECT:
+                    return new BytesReceivePacket(length);
+                default:
+                    throw new UnsupportedOperationException("Unsupported packet type: " + type);
+            }
+        }
+
+        @Override
+        public void onReceivePacketCompleted(ReceivePacket<?, ?> packet) {
+            onReceivedPacket(packet);
+        }
+    };
 }

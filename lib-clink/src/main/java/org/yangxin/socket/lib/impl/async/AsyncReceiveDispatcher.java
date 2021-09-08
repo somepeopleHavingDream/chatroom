@@ -1,10 +1,6 @@
 package org.yangxin.socket.lib.impl.async;
 
-import org.yangxin.socket.lib.box.StringReceivePacket;
-import org.yangxin.socket.lib.core.IoArgs;
-import org.yangxin.socket.lib.core.ReceiveDispatcher;
-import org.yangxin.socket.lib.core.ReceivePacket;
-import org.yangxin.socket.lib.core.Receiver;
+import org.yangxin.socket.lib.core.*;
 import org.yangxin.socket.lib.utils.CloseUtils;
 
 import java.io.IOException;
@@ -115,9 +111,10 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
         if (packetTemp == null) {
             // 获得当前包的总字节长度
             int length = args.readLength();
+            byte type = length > 200 ? Packet.TYPE_STREAM_FILE : Packet.TYPE_MEMORY_STRING;
 
             // 实例化字符串接收包
-            packetTemp = new StringReceivePacket(length);
+            packetTemp = callback.onArrivedNewPacket(type, length);
             writablePacketChannel = Channels.newChannel(packetTemp.open());
 
             total = length;

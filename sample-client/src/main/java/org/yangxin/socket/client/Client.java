@@ -1,13 +1,12 @@
 package org.yangxin.socket.client;
 
 import org.yangxin.socket.client.bean.ServerInfo;
+import org.yangxin.socket.foo.Foo;
+import org.yangxin.socket.lib.box.FileSendPacket;
 import org.yangxin.socket.lib.core.IoContext;
 import org.yangxin.socket.lib.impl.IoSelectorProvider;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 
 /**
  * @author yangxin
@@ -17,6 +16,7 @@ import java.io.InputStreamReader;
 public class Client {
 
     public static void main(String[] args) throws IOException {
+        File cachePath = Foo.getCacheDir("client");
         IoContext.setup()
                 .ioProvider(new IoSelectorProvider())
                 .start();
@@ -28,7 +28,7 @@ public class Client {
             TcpClient client = null;
 
             try {
-                client = TcpClient.startWith(info);
+                client = TcpClient.startWith(info, cachePath);
                 if (client == null) {
                     return;
                 }
@@ -54,15 +54,27 @@ public class Client {
         do {
             // 键盘读取一行
             String msg = input.readLine();
-            // 发送到服务器
-            client.send(msg);
-            client.send(msg);
-            client.send(msg);
-            client.send(msg);
-
             if ("00bye00".equalsIgnoreCase(msg)) {
                 break;
             }
+
+            // asdwqrqwrqwrqwe
+            // --f url
+            if (msg.startsWith("--f")) {
+                String[] array = msg.split(" ");
+                if (array.length >= 2) {
+                    String filePath = array[1];
+                    File file = new File(filePath);
+                    if (file.exists() && file.isFile()) {
+                        FileSendPacket packet = new FileSendPacket(file);
+                        client.send(packet);
+                        continue;
+                    }
+                }
+            }
+
+            // 发送字符串
+            client.send(msg);
         } while (true);
     }
 }
