@@ -4,6 +4,7 @@ import lombok.Setter;
 import org.yangxin.socket.lib.utils.CloseUtils;
 import org.yangxin.socket.server.handle.ClientHandler;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
@@ -25,15 +26,17 @@ import java.util.concurrent.Executors;
 public class TcpServer implements ClientHandler.ClientHandlerCallback {
 
     private final int port;
+    private final File cachePath;
+    private final ExecutorService forwardingExecutor;
     private ClientListener listener;
     private final List<ClientHandler> handlers = new ArrayList<>();
-    private final ExecutorService forwardingExecutor;
     private Selector selector;
     private ServerSocketChannel channel;
 
-    public TcpServer(int port) {
+    public TcpServer(int port, File cachePath) {
         // 设置端口
         this.port = port;
+        this.cachePath = cachePath;
         // 转发线程池
         this.forwardingExecutor = Executors.newSingleThreadExecutor();
     }
@@ -168,7 +171,9 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
 
                             try {
                                 // 为客户端构建异步线程
-                                ClientHandler handler = new ClientHandler(clientChannel, TcpServer.this);
+                                ClientHandler handler = new ClientHandler(clientChannel,
+                                        TcpServer.this,
+                                        cachePath);
                                 // 添加同步处理
                                 synchronized (TcpServer.this) {
                                     handlers.add(handler);

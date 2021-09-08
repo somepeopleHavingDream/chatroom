@@ -1,10 +1,12 @@
 package org.yangxin.socket.server;
 
+import org.yangxin.socket.foo.Foo;
 import org.yangxin.socket.foo.constants.TcpConstants;
 import org.yangxin.socket.lib.core.IoContext;
 import org.yangxin.socket.lib.impl.IoSelectorProvider;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -15,13 +17,14 @@ import java.io.InputStreamReader;
 public class Server {
 
     public static void main(String[] args) throws IOException {
+        File cachePath = Foo.getCacheDir("server");
         // 启动输入输出上下文，监听处理
         IoContext.setup()
                 .ioProvider(new IoSelectorProvider())
                 .start();
 
         // 启动tcp服务端，监听注册
-        TcpServer server = new TcpServer(TcpConstants.PORT_SERVER);
+        TcpServer server = new TcpServer(TcpConstants.PORT_SERVER, cachePath);
         boolean isSucceed = server.start();
         if (!isSucceed) {
             System.out.println("Start tcp server failed!");
@@ -36,8 +39,13 @@ public class Server {
         String str;
         do {
             str = reader.readLine();
+            if ("00bye00".equalsIgnoreCase(str)) {
+                break;
+            }
+
+            // 发送字符串
             server.broadcast(str);
-        } while (!"00bye00".equalsIgnoreCase(str));
+        } while (true);
 
         // 关闭相关资源
         UdpProvider.stop();

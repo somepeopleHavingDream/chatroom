@@ -1,15 +1,14 @@
 package org.yangxin.socket.server.handle;
 
+import org.yangxin.socket.foo.Foo;
 import org.yangxin.socket.lib.core.Connection;
+import org.yangxin.socket.lib.core.Packet;
+import org.yangxin.socket.lib.core.ReceivePacket;
 import org.yangxin.socket.lib.utils.CloseUtils;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @author yangxin
@@ -17,6 +16,8 @@ import java.util.concurrent.Executors;
  */
 @SuppressWarnings("AlibabaAvoidManuallyCreateThread")
 public class ClientHandler extends Connection {
+
+    private final File cachePath;
 
     /**
      * 客户端处理者的回调
@@ -28,10 +29,11 @@ public class ClientHandler extends Connection {
      */
     private final String clientInfo;
 
-    public ClientHandler(SocketChannel channel, ClientHandlerCallback handlerCallback) throws IOException {
+    public ClientHandler(SocketChannel channel, ClientHandlerCallback handlerCallback, File cachePath) throws IOException {
         // 客户端通道
         this.handlerCallback = handlerCallback;
         this.clientInfo = channel.getRemoteAddress().toString();
+        this.cachePath = cachePath;
 
         System.out.println("新客户端连接：" + clientInfo);
 
@@ -54,15 +56,25 @@ public class ClientHandler extends Connection {
         exitBySelf();
     }
 
-    private void exitBySelf() {
-        exit();
-        handlerCallback.onSelfClose(this);
+    @Override
+    protected File createNewReceiveFile() {
+        return Foo.createRandomTemp(cachePath);
     }
 
     @Override
-    protected void onReceiveNewMessage(String str) {
-        super.onReceiveNewMessage(str);
-        handlerCallback.onNewMessageArrived(this, str);
+    protected void onReceivedPacket(ReceivePacket<?, ?> packet) {
+        super.onReceivedPacket(packet);
+
+        if (packet.type() == Packet.TYPE_MEMORY_STRING) {
+            String string = (String) packet.entity();
+            System.out.println(key + ":" + string);
+            handlerCallback.onNewMessageArrived(this, string);
+        }
+    }
+
+    private void exitBySelf() {
+        exit();
+        handlerCallback.onSelfClose(this);
     }
 
     public interface ClientHandlerCallback {

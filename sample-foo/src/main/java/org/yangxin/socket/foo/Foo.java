@@ -19,7 +19,7 @@ public class Foo {
                 + (File.separator + dir);
         File file = new File(path);
         if (!file.exists()) {
-            if (!file.mkdir()) {
+            if (!file.mkdirs()) {
                 throw new RuntimeException("Create path error: " + path);
             }
         }
