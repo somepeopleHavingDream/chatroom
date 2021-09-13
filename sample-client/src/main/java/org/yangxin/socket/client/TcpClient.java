@@ -24,6 +24,7 @@ public class TcpClient extends Connection {
 
     public TcpClient(SocketChannel socketChannel, File cachePath) throws IOException {
         this.cachePath = cachePath;
+
         // 设置一些参数
         setup(socketChannel);
     }

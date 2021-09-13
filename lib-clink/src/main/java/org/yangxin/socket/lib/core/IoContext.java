@@ -61,7 +61,6 @@ public class IoContext {
         private IoProvider provider;
 
         private StartedBoot() {
-
         }
 
         public StartedBoot ioProvider(IoProvider provider) {

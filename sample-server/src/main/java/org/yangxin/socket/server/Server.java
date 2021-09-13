@@ -14,10 +14,13 @@ import java.io.InputStreamReader;
  * @author yangxin
  * 2021/8/12 15:52
  */
+@SuppressWarnings("AlibabaUndefineMagicConstant")
 public class Server {
 
     public static void main(String[] args) throws IOException {
+        // 获得一个缓存目录
         File cachePath = Foo.getCacheDir("server");
+
         // 启动输入输出上下文，监听处理
         IoContext.setup()
                 .ioProvider(new IoSelectorProvider())

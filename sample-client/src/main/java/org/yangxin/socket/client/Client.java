@@ -16,7 +16,9 @@ import java.io.*;
 public class Client {
 
     public static void main(String[] args) throws IOException {
+        // 获得缓存路径
         File cachePath = Foo.getCacheDir("client");
+
         IoContext.setup()
                 .ioProvider(new IoSelectorProvider())
                 .start();

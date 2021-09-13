@@ -25,12 +25,13 @@ public class UdpProvider {
         // 先停止udp提供者
         stop();
 
-        // 实例并启动和设置提供者
+        // 实例化并启动和设置提供者
         String sn = UUID.randomUUID().toString();
         Provider provider = new Provider(sn, port);
         Thread thread = new Thread(provider);
         provider.setThread(thread);
         thread.start();
+
         providerInstance = provider;
     }
 

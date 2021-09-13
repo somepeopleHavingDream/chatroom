@@ -113,7 +113,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
             int length = args.readLength();
             byte type = length > 200 ? Packet.TYPE_STREAM_FILE : Packet.TYPE_MEMORY_STRING;
 
-            // 实例化字符串接收包
+            // 实例化接收包
             packetTemp = callback.onArrivedNewPacket(type, length);
             writablePacketChannel = Channels.newChannel(packetTemp.open());
 
@@ -128,7 +128,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IoArgs.IoArgsE
 
             // 检查是否已完成一份Packet的接收
             if (position == total) {
-                // 如果当前接收进度到达重点，则完成调用完成包方法，并置临时接收包的引用为null
+                // 如果当前接收进度到达终点，则完成调用完成包方法，并置临时接收包的引用为null
                 completePacket(true);
             }
         } catch (Exception e) {

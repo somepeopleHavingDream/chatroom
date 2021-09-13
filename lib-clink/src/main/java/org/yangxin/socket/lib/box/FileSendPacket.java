@@ -2,7 +2,9 @@ package org.yangxin.socket.lib.box;
 
 import org.yangxin.socket.lib.core.SendPacket;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 /**
  * 文件发送包
@@ -16,6 +18,7 @@ public class FileSendPacket extends SendPacket<FileInputStream> {
 
     public FileSendPacket(File file) {
         this.file = file;
+
         // 此属性来自于Packet
         this.length = file.length();
     }

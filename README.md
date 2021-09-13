@@ -41,6 +41,9 @@
       - StringReceivePacket
         - ReceivePacket
           - Packet
+      - FileSendPacket
+        - SendPacket
+          - Packet
   - sample-client
     - TcpClient
       - Connection

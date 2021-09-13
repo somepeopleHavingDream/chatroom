@@ -34,9 +34,10 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
     private ServerSocketChannel channel;
 
     public TcpServer(int port, File cachePath) {
-        // 设置端口
+        // 设置端口和缓存路径
         this.port = port;
         this.cachePath = cachePath;
+
         // 转发线程池
         this.forwardingExecutor = Executors.newSingleThreadExecutor();
     }
