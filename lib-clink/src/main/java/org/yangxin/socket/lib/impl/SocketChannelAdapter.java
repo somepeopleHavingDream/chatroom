@@ -117,7 +117,9 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
 
             try {
                 // 具体的读取操作
-                if (args.readFrom(channel) > 0) {
+                if (args == null) {
+                    processor.onConsumeFailed(null, new IOException("ProvideIoArgs is null."));
+                } else if (args.readFrom(channel) > 0) {
                     // 读取完成回调
                     processor.onConsumeCompleted(args);
                 } else {
@@ -147,7 +149,9 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
 
             try {
                 // 具体的写操作
-                if (args.writeTo(channel) > 0) {
+                if (args == null) {
+                    processor.onConsumeFailed(null, new IOException("ProvideIoArgs is null."));
+                } else if (args.writeTo(channel) > 0) {
                     // 消费完成时回调
                     processor.onConsumeCompleted(args);
                 } else {

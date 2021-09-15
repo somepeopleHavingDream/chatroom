@@ -1,6 +1,5 @@
 package org.yangxin.socket.lib.core;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -15,5 +14,12 @@ public abstract class SendPacket<T extends InputStream> extends Packet<T> {
 
     public boolean isCanceled() {
         return isCanceled;
+    }
+
+    /**
+     * 设置取消发送标记
+     */
+    public void cancel() {
+        isCanceled = true;
     }
 }
