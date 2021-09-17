@@ -4,6 +4,7 @@ import org.yangxin.socket.lib.core.Frame;
 import org.yangxin.socket.lib.core.IoArgs;
 import org.yangxin.socket.lib.core.SendPacket;
 
+import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 
 /**
@@ -12,7 +13,10 @@ import java.nio.channels.ReadableByteChannel;
  */
 public class SendEntityFrame extends AbstractSendPacketFrame {
 
-    public SendEntityFrame(short identifier,
+    private final ReadableByteChannel channel;
+    private final long unConsumeEntityLength;
+
+    SendEntityFrame(short identifier,
                            long entityLength,
                            ReadableByteChannel channel,
                            SendPacket<?> packet) {
@@ -21,15 +25,31 @@ public class SendEntityFrame extends AbstractSendPacketFrame {
                 Frame.FLAG_NONE,
                 identifier,
                 packet);
+
+        // 1234567890
+        // 1234 5678 90
+        // 10 4,6 4,2 2
+        unConsumeEntityLength = entityLength - bodyRemaining;
+        this.channel = channel;
     }
 
     @Override
-    public Frame nextFrame() {
-        return null;
+    protected int consumeBody(IoArgs args) throws IOException {
+        if (packet == null) {
+            // 已终止当前帧，则填充假数据
+            return args.fillEmpty(bodyRemaining);
+        }
+
+        return args.readFrom(channel);
     }
 
     @Override
-    protected int consumeBody(IoArgs args) {
-        return 0;
+    public Frame buildNextFrame() {
+        if (unConsumeEntityLength == 0) {
+            return null;
+        }
+
+        return new SendEntityFrame(getBodyIdentifier(),
+                unConsumeEntityLength, channel, packet);
     }
 }

@@ -45,5 +45,16 @@ public abstract class AbstractSendFrame extends Frame {
         return (byte) args.readFrom(header, offset, count);
     }
 
+    /**
+     * 消费消息体
+     *
+     * @param args 输入输出参数
+     * @return 消费了多少个字节
+     * @throws IOException 输入输出异常
+     */
     protected abstract int consumeBody(IoArgs args) throws IOException;
+
+    protected synchronized boolean isSending() {
+        return headerRemaining < Frame.FRAME_HEADER_LENGTH;
+    }
 }

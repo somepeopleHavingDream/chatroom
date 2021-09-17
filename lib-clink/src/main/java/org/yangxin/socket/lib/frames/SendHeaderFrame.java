@@ -53,7 +53,7 @@ public class SendHeaderFrame extends AbstractSendPacketFrame {
     }
 
     @Override
-    public Frame nextFrame() {
+    public Frame buildNextFrame() {
         InputStream stream = packet.open();
         ReadableByteChannel channel = Channels.newChannel(stream);
 

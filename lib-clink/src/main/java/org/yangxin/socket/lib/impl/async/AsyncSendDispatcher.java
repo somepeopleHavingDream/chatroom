@@ -174,7 +174,7 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
 
             // 写入长度
             args.limit(4);
-            args.writeLength((int) packetTemp.length());
+//            args.writeLength((int) packetTemp.length());
         } else {
             // 如果通道不为null
             args.limit((int) Math.min(args.capacity(), total - position));

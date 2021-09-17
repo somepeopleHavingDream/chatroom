@@ -50,9 +50,6 @@ public class IoArgs {
      * 从可读字节通道中读取数据
      */
     public int readFrom(ReadableByteChannel channel) throws IOException {
-        // 开始写数据到底层缓冲
-        startWriting();
-
         int bytes = 0;
         while (buffer.hasRemaining()) {
             // 从通道中读取字节到底层缓冲
@@ -62,9 +59,6 @@ public class IoArgs {
             }
             bytes += length;
         }
-
-        // 结束写数据到底层缓冲
-        finishWriting();
 
         // 返回写入了多少个字节
         return bytes;
@@ -154,17 +148,6 @@ public class IoArgs {
         this.limit = Math.min(limit, buffer.capacity());
     }
 
-    public void writeLength(int total) {
-        // 开始写
-        startWriting();
-
-        // 放入长度
-        buffer.putInt(total);
-
-        // 结束写
-        finishWriting();
-    }
-
     public int readLength() {
         return buffer.getInt();
     }
@@ -175,6 +158,12 @@ public class IoArgs {
 
     public boolean remained() {
         return buffer.remaining() > 0;
+    }
+
+    public int fillEmpty(int size) {
+        int fillSize = Math.min(size, buffer.remaining());
+        buffer.position(buffer.position() + fillSize);
+        return fillSize;
     }
 
     /**
