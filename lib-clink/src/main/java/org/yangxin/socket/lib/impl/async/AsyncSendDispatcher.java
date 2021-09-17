@@ -7,8 +7,6 @@ import org.yangxin.socket.lib.core.Sender;
 import org.yangxin.socket.lib.utils.CloseUtils;
 
 import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,37 +15,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author yangxin
  * 2021/8/28 下午10:12
  */
-public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventProcessor {
+public class AsyncSendDispatcher implements SendDispatcher,
+        IoArgs.IoArgsEventProcessor,
+        AsyncPacketReader.PacketProvider {
 
     private final Sender sender;
     private final Queue<SendPacket<?>> queue = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean isSending = new AtomicBoolean();
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
-    /**
-     * 数据将从包的抽象转成输入输出参数的抽象
-     */
-    private final IoArgs ioArgs = new IoArgs();
-
-    /**
-     * 当前处理的发送包
-     */
-    private SendPacket<?> packetTemp;
-
-    /**
-     * 包通道
-     */
-    private ReadableByteChannel readablePacketChannel;
-
-    /**
-     * 当前发送的packet的大小
-     */
-    private long total;
-
-    /**
-     * 当前发送的packet的进度
-     */
-    private int position;
+    private final AsyncPacketReader reader = new AsyncPacketReader(this);
+    private final Object queueLock = new Object();
 
     public AsyncSendDispatcher(Sender sender) {
         // 设置发送者
@@ -57,18 +35,32 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
 
     @Override
     public void send(SendPacket<?> packet) {
-        // 将发送包入队
-        queue.offer(packet);
+        synchronized (queueLock) {
+            // 将发送包入队
+            queue.offer(packet);
 
-        // 设置发送状态，并实际地发送下一个包（isSending状态在发送完一个包后未关闭）
-        if (isSending.compareAndSet(false, true)) {
-            sendNextPacket();
+            // 设置发送状态，并实际地发送下一个包（isSending状态在发送完一个包后未关闭）
+            if (isSending.compareAndSet(false, true)) {
+                if (reader.requestTakePacket()) {
+                    requestSend();
+                }
+            }
+
         }
     }
 
     @Override
     public void cancel(SendPacket<?> packet) {
+        boolean ret;
+        synchronized (queueLock) {
+            ret = queue.remove(packet);
+        }
+        if (ret) {
+            packet.cancel();
+            return;
+        }
 
+        reader.cancel(packet);
     }
 
     /**
@@ -76,10 +68,21 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
      *
      * @return 发送包
      */
-    private SendPacket<?> takePacket() {
-        // 从发送队列中取出一个发送包
-        SendPacket<?> packet = queue.poll();
-        if (packet != null && packet.isCanceled()) {
+    @Override
+    public SendPacket<?> takePacket() {
+        SendPacket<?> packet;
+
+        synchronized (queueLock) {
+            // 从发送队列中取出一个发送包
+            packet = queue.poll();
+            if (packet == null) {
+                // 队列为空，取消发送状态
+                isSending.set(false);
+                return null;
+            }
+        }
+
+        if (packet.isCanceled()) {
             // 已取消，不用发送
             return takePacket();
         }
@@ -88,66 +91,25 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
         return packet;
     }
 
-    private void sendNextPacket() {
-        // 如果上一个发送包因为某些原因未被发送完，则关闭上一个包
-        SendPacket<?> temp = packetTemp;
-        if (temp != null) {
-            CloseUtils.close(temp);
-        }
-
-        // 取出一个发送包
-        SendPacket<?> packet = takePacket();
-        packetTemp = packet;
-        if (packet == null) {
-            // 队列为空，取消状态发送，然后返回
-            isSending.set(false);
-            return;
-        }
-
-        // 当前发送包的总字节数
-        total = packet.length();
-        // 当前包发送到第几个字节
-        position = 0;
-
-        // 发送当前包
-        sendCurrentPacket();
-    }
-
-    /**
-     * 发送当前包
-     */
-    private void sendCurrentPacket() {
-        if (position >= total) {
-            completePacket(position == total);
-            sendNextPacket();
-            return;
-        }
-
-        try {
-            sender.postSendAsync();
-        } catch (IOException e) {
-            closeAndNotify();
-        }
-    }
-
     /**
      * 完成Packet发送
      *
      * @param isSucceed 是否成功
      */
-    private void completePacket(boolean isSucceed) {
-        SendPacket<?> packet = this.packetTemp;
-        if (packet == null) {
-            return;
-        }
-
+    @Override
+    public void completedPacket(SendPacket<?> packet, boolean isSucceed) {
         CloseUtils.close(packet);
-        CloseUtils.close(readablePacketChannel);
+    }
 
-        packetTemp = null;
-        readablePacketChannel = null;
-        total = 0;
-        position = 0;
+    /**
+     * 请求网络进行数据发送
+     */
+    private void requestSend() {
+        try {
+            sender.postSendAsync();
+        } catch (IOException e) {
+            closeAndNotify();
+        }
     }
 
     private void closeAndNotify() {
@@ -158,49 +120,30 @@ public class AsyncSendDispatcher implements SendDispatcher, IoArgs.IoArgsEventPr
     public void close() throws IOException {
         if (isClosed.compareAndSet(false, true)) {
             isSending.set(false);
-            // 异常关闭导致的完成
-            completePacket(false);
+            // reader关闭
+            reader.close();
         }
     }
 
     @Override
     public IoArgs provideIoArgs() {
-        // 拿到输入输出参数
-        IoArgs args = ioArgs;
-
-        if (readablePacketChannel == null) {
-            // 如果通道为null，则获取一个新的通道
-            readablePacketChannel = Channels.newChannel(packetTemp.open());
-
-            // 写入长度
-            args.limit(4);
-//            args.writeLength((int) packetTemp.length());
-        } else {
-            // 如果通道不为null
-            args.limit((int) Math.min(args.capacity(), total - position));
-
-            try {
-                // 将可读通道中的数据写入到输入输出参数中，并且更新当前处理包的进度
-                int count = args.readFrom(readablePacketChannel);
-                position += count;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        // 返回输入输出参数
-        return args;
+        return reader.fillData();
     }
 
     @Override
     public void onConsumeFailed(IoArgs args, Exception e) {
-        e.printStackTrace();
+        if (args != null) {
+            e.printStackTrace();
+        } else {
+            // todo
+        }
     }
 
     @Override
     public void onConsumeCompleted(IoArgs args) {
         // 继续发送当前包
-        sendCurrentPacket();
+        if (reader.requestTakePacket()) {
+            requestSend();
+        }
     }
 }
