@@ -25,6 +25,28 @@ public class IoArgs {
     private final ByteBuffer buffer = ByteBuffer.allocate(limit);
 
     /**
+     * 从bytes数组进行消费
+     */
+    public int readFrom(byte[] bytes, int offset, int count) {
+        int size = Math.min(count, buffer.remaining());
+        if (size <= 0) {
+            return 0;
+        }
+        buffer.put(bytes, offset, size);
+
+        return size;
+    }
+
+    /**
+     * 写入数据到bytes中
+     */
+    public int writeTo(byte[] bytes, int offset) {
+        int size = Math.min(bytes.length - offset, buffer.remaining());
+        buffer.get(bytes, offset, size);
+        return size;
+    }
+
+    /**
      * 从可读字节通道中读取数据
      */
     public int readFrom(ReadableByteChannel channel) throws IOException {
@@ -129,7 +151,7 @@ public class IoArgs {
      * @param limit 区间大小
      */
     public void limit(int limit) {
-        this.limit = limit;
+        this.limit = Math.min(limit, buffer.capacity());
     }
 
     public void writeLength(int total) {
@@ -149,6 +171,10 @@ public class IoArgs {
 
     public int capacity() {
         return buffer.capacity();
+    }
+
+    public boolean remained() {
+        return buffer.remaining() > 0;
     }
 
     /**
