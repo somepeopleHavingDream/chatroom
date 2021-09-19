@@ -9,12 +9,14 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
 /**
+ * Packet头帧
+ *
  * @author yangxin
  * 2021/9/15 下午9:07
  */
 public class SendHeaderFrame extends AbstractSendPacketFrame {
 
-    private static final int PACKET_HEADER_FRAME_MIN_LENGTH = 6;
+    static final int PACKET_HEADER_FRAME_MIN_LENGTH = 6;
     private final byte[] body;
 
     public SendHeaderFrame(short identifier, SendPacket<?> packet) {
@@ -28,8 +30,10 @@ public class SendHeaderFrame extends AbstractSendPacketFrame {
         final byte packetType = packet.type();
         final byte[] packetHeaderInfo = packet.headerInfo();
 
+        // 头部对应的数据信息长度
         body = new byte[bodyRemaining];
 
+        // 头5字节存储长度信息低5字节（40位）数据
         // 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
         body[0] = (byte) (packetLength >> 32);
         body[1] = (byte) (packetLength >> 24);
