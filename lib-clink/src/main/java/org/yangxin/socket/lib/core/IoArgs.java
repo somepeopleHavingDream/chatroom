@@ -166,6 +166,12 @@ public class IoArgs {
         return fillSize;
     }
 
+    public int setEmpty(int size) {
+        int emptySize = Math.min(size, buffer.remaining());
+        buffer.position(buffer.position() + emptySize);
+        return emptySize;
+    }
+
     /**
      * IoArgs提供者、处理者；
      * 数据的生产或消费者

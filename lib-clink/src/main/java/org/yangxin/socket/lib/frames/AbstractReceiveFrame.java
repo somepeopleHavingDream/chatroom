@@ -38,6 +38,11 @@ public abstract class AbstractReceiveFrame extends Frame {
         return null;
     }
 
+    @Override
+    public int getConsumableLength() {
+        return bodyRemaining;
+    }
+
     /**
      * 消费帧体
      *

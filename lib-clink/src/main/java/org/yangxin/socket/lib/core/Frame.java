@@ -125,4 +125,11 @@ public abstract class Frame {
      * @return null：没有待消费的帧
      */
     public abstract Frame nextFrame();
+
+    /**
+     * 得到可消费的字节长度
+     *
+     * @return 可消费的长度
+     */
+    public abstract int getConsumableLength();
 }
