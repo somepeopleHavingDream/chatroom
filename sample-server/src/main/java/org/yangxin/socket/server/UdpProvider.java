@@ -21,17 +21,23 @@ public class UdpProvider {
      */
     private static Provider providerInstance;
 
+    /**
+     * 开启udp提供者
+     *
+     * @param port udp提供者要提供出去的端口
+     */
     static void start(Integer port) {
         // 先停止udp提供者
         stop();
 
-        // 实例化并启动和设置提供者
+        // 实例化并启动
         String sn = UUID.randomUUID().toString();
         Provider provider = new Provider(sn, port);
         Thread thread = new Thread(provider);
         provider.setThread(thread);
         thread.start();
 
+        // 设置提供者
         providerInstance = provider;
     }
 
@@ -55,20 +61,26 @@ public class UdpProvider {
         private final byte[] sn;
         private final Integer port;
         private DatagramSocket datagramSocket = null;
+
+        /**
+         * 用于执行此提供者任务的线程
+         */
         private Thread thread;
 
         /**
-         * 存储消息的Buffer
+         * 存储udp消息的缓冲
          */
         final byte[] buffer = new byte[128];
 
         private Provider(String sn, Integer port) {
+            // 设置序列号和端口
             this.sn = sn.getBytes();
             this.port = port;
         }
 
         @Override
         public void run() {
+            // udp提供者已启动
             System.out.println("UdpProvider started.");
 
             try {
@@ -79,7 +91,7 @@ public class UdpProvider {
 
                 // 若该线程未被打断，则一直监听Udp的端口
                 while (!Thread.currentThread().isInterrupted()) {
-                    // 接收
+                    // 接收udp数据
                     datagramSocket.receive(receivePacket);
 
                     // 打印接收到的信息与发送者的信息
@@ -91,6 +103,7 @@ public class UdpProvider {
                     boolean isValid = clientDataLength >= (UdpConstants.header.length + 2 + 4)
                             && ByteUtils.startsWith(clientData, UdpConstants.header);
 
+                    // 打印接收到的udp的一些简单信息
                     System.out.println("UdpProvider receive from ip: " + clientIp
                             + "\tport: " + clientPort
                             + "\tdataValid: " + isValid);
@@ -123,33 +136,43 @@ public class UdpProvider {
                                 length, receivePacket.getAddress(), responsePort);
                         datagramSocket.send(responsePacket);
 
+                        // 打印响应出去的udp信息
                         System.out.println("UdpProvider response to: " + clientIp
                                 + "\tport: " + responsePort
                                 + "\tdataLength: " + length);
                     } else {
+                        // 若命令不合法，则打印相关信息
                         System.out.println("UdpProvider receive cmd nonsupport; cmd: " + cmd + "\tport: " + port);
                     }
                 }
             } catch (Exception ignored) {
             } finally {
+                // 若线程不再运行，或捕获到相关异常，则调用udp提供者的关闭方法
                 close();
             }
 
-            // 完成
+            // Udp提供者完成
             System.out.println("UdpProvider finished.");
         }
 
+        /**
+         * 关闭提供者
+         */
         private void close() {
-            // 关闭udp数据包套接字
+            // 关闭udp数据包套接字，并置其引用为null
             if (datagramSocket != null) {
                 datagramSocket.close();
                 datagramSocket = null;
             }
         }
 
+        /**
+         * 提供者退出
+         */
         public void exit() {
             // 中断循环线程
             thread.interrupt();
+            // 关闭提供者
             close();
         }
     }

@@ -18,14 +18,21 @@ import java.io.IOException;
  */
 public class AsyncPacketReader implements Closeable {
 
+    /**
+     * 用于此异步包阅读者的包提供者
+     */
     private final PacketProvider provider;
+
     private volatile IoArgs args = new IoArgs();
 
     /**
-     * Frame队列
+     * 帧队列
      */
     private volatile BytePriorityNode<Frame> node;
 
+    /**
+     * 当前帧链表的节点长度
+     */
     private volatile int nodeSize = 0;
 
     /**
@@ -38,21 +45,28 @@ public class AsyncPacketReader implements Closeable {
     }
 
     /**
-     * 请求从{@link #provider}队列中拿一份Packet进行发送
+     * 请求从{@link #provider}队列中拿一份Packet进行发送，
+     * 并不是返回一个用于发送的包，而是将包封装成发送帧，并将该帧置入队列
      *
      * @return 如果当前Reader中有可以用于网络发送的数据，则返回True
      */
     boolean requestTakePacket() {
+        // 锁住当前实例
         synchronized (this) {
+            // 如果当前帧队列长度大于1，则直接返回真
             if (nodeSize >= 1) {
                 return true;
             }
         }
 
+        // 从包提供者处拿到一个发送包
         SendPacket<?> packet = provider.takePacket();
         if (packet != null) {
+            // 生成标识符
             short identifier = generateIdentifier();
+            // 实例化一个发送头帧
             SendHeaderFrame frame = new SendHeaderFrame(identifier, packet);
+            // 将发送头帧追加到帧链表中
             appendNewFrame(frame);
         }
 
@@ -62,11 +76,12 @@ public class AsyncPacketReader implements Closeable {
     }
 
     /**
-     * 填充数据到IoArgs中
+     * 填充数据到输入输出参数中
      *
      * @return 如果当前有可用于发送的帧，则填充数据并返回，如果填充失败可返回null
      */
     IoArgs fillData() {
+        // 生成当前帧
         Frame currentFrame = generateCurrentFrame();
         if (currentFrame == null) {
             return null;
@@ -156,7 +171,13 @@ public class AsyncPacketReader implements Closeable {
         node = null;
     }
 
+    /**
+     * 追加一个新的帧
+     *
+     * @param frame 新帧
+     */
     private synchronized void appendNewFrame(Frame frame) {
+        // 实例化一个新的字节优先级节点
         BytePriorityNode<Frame> newNode = new BytePriorityNode<>(frame);
         if (node != null) {
             // 使用优先级别添加到链表
@@ -167,10 +188,17 @@ public class AsyncPacketReader implements Closeable {
         nodeSize++;
     }
 
+    /**
+     * 生成当前帧
+     *
+     * @return 帧
+     */
     private synchronized Frame generateCurrentFrame() {
+        // 说明帧队列为null，直接返回null
         if (node == null) {
             return null;
         }
+
         return node.item;
     }
 
@@ -199,6 +227,11 @@ public class AsyncPacketReader implements Closeable {
         }
     }
 
+    /**
+     * 生成标识符
+     *
+     * @return 标识符
+     */
     private short generateIdentifier() {
         short identifier = ++lastIdentifier;
         if (identifier == 255) {
@@ -207,6 +240,9 @@ public class AsyncPacketReader implements Closeable {
         return identifier;
     }
 
+    /**
+     * 包提供者
+     */
     interface PacketProvider {
 
         /**

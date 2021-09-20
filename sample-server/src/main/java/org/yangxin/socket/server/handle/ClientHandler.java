@@ -29,12 +29,14 @@ public class ClientHandler extends Connection {
      */
     private final String clientInfo;
 
-    public ClientHandler(SocketChannel channel, ClientHandlerCallback handlerCallback, File cachePath) throws IOException {
-        // 客户端通道
+    public ClientHandler(SocketChannel channel, ClientHandlerCallback handlerCallback, File cachePath)
+            throws IOException {
+        // 设置处理者回调、客户端信息、用户文件传输的缓存路径
         this.handlerCallback = handlerCallback;
         this.clientInfo = channel.getRemoteAddress().toString();
         this.cachePath = cachePath;
 
+        // 打印连接的客户端信息
         System.out.println("新客户端连接：" + clientInfo);
 
         // 设置一些参数

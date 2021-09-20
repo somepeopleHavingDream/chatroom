@@ -21,6 +21,9 @@ public interface ReceiveDispatcher extends Closeable {
      */
     void stop();
 
+    /**
+     * 接收包回调
+     */
     interface ReceivePacketCallback {
 
         /**

@@ -45,7 +45,7 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
     private IoArgs.IoArgsEventProcessor receiveIoEventProcessor;
 
     /**
-     * 发送的输入输出事件监听器
+     * 发送的输入输出参数事件监听器
      */
     private IoArgs.IoArgsEventProcessor sendIoEventProcessor;
 
@@ -65,6 +65,7 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
 
     @Override
     public boolean postReceiveAsync() throws IOException {
+        // 如果该套接字通道适配器已关闭，则抛出当前通道已被关闭的输入输出异常
         if (isClosed.get()) {
             throw new IOException("Current channel is closed!");
         }
@@ -79,10 +80,12 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
 
     @Override
     public boolean postSendAsync() throws IOException {
+        // 如果当前套接字通道适配者已关闭，则抛出当前通道已关闭的输入输出异常
         if (isClosed.get()) {
             throw new IOException("Current channel is closed!");
         }
 
+        // 向输入输出提供者注册输出事件
         return ioProvider.registerOutput(channel, outputCallback);
     }
 
@@ -132,19 +135,20 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
     };
 
     /**
-     * 输出回调，即当选择器监听到写事件时，最终会调用此回调方法。
+     * 输出回调，即当选择器监听到写事件时，并做处理时，最终会调用此回调方法
      */
     private final IoProvider.HandleOutputCallback outputCallback = new IoProvider.HandleOutputCallback() {
 
         @Override
         protected void canProviderOutput() {
+            // 如果当前套接字通道适配者已经关闭，则直接返回
             if (isClosed.get()) {
                 return;
             }
 
             // 获得发送输入输出事件处理器
             IoArgs.IoArgsEventProcessor processor = sendIoEventProcessor;
-            // 从输入输出事件处理器中拿到输入输出参数
+            // 从输入输出参数事件处理器中拿到输入输出参数
             IoArgs args = processor.provideIoArgs();
 
             try {

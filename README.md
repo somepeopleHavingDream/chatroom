@@ -11,6 +11,11 @@
         - SendDispatcher
           - Closeable
         - IoArgs.IoArgsEventProcessor
+        - AsyncPacketReader.PackerProvider
+      - SendDispatcher
+        - Closeable
+      - ReceiveDispatcher
+        - Closeable
       - Connection
         - Closeable
         - SocketChannelAdapter.OnChannelStatusChangedListener
@@ -25,6 +30,9 @@
         - Closeable
       - Receiver
         - Closeable
+      - IoContext
+      - ds
+        - BytePriorityNode
     - impl
       - SocketChannelAdapter
         - Sender
@@ -34,16 +42,27 @@
         - Cloneable
       - IoSelectorProvider
         - IoProvider
+          - Closeable
+      - async
+        - AsyncPacketReader
+          - Closeable
     - box
       - StringSendPacket
-        - SendPacket
-          - Packet
+        - BytesSendPacket
+          - SendPacket
+            - Packet
+              - Closeable
       - StringReceivePacket
         - ReceivePacket
           - Packet
       - FileSendPacket
         - SendPacket
           - Packet
+    - frames
+      - SendHeaderFrame
+        - AbstractSendPacketFrame
+          - AbstractSendFrame
+            - Frame
   - sample-client
     - TcpClient
       - Connection
@@ -53,6 +72,18 @@
     - ClientHandler
       - Connection
         - Closeable
-          - SocketChannelAdapter.OnChannelStatusChangedListener
+        - SocketChannelAdapter.OnChannelStatusChangedListener
     - TcpServer
       - ClientHandler.ClientHandlerCallback
+    - UdpProvider
+  - sample-foo
+    - constants
+      - TcpConstants
+      - UdpConstants
+    - Foo
+
+- 涉及到的数据结构
+  - Byte
+  - IoArgs
+  - Frame
+  - Packet

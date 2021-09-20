@@ -63,7 +63,8 @@ public abstract class Connection implements Closeable, SocketChannelAdapter.OnCh
         // 设置客户端通道
         this.channel = channel;
 
-        // 通过输入输出上下文获得套接字通道适配器
+        // 通过输入输出上下文获得套接字通道适配器，
+        // （输入输出上下文环境获取到的输入输出提供者具体是哪个服务端的实例还是客户端的实例这并不重要，因为两个实例起到的作用是一样的）
         IoContext context = IoContext.get();
         SocketChannelAdapter adapter = new SocketChannelAdapter(channel, context.getIoProvider(), this);
 
@@ -79,11 +80,16 @@ public abstract class Connection implements Closeable, SocketChannelAdapter.OnCh
         receiveDispatcher.start();
     }
 
+    /**
+     * 发送消息
+     *
+     * @param msg 消息
+     */
     public void send(String msg) {
-        // 每次都是实例化一个字符串发送包
+        // 每次都是实例化一个字符串发送包，即发送的消息只支持字符串消息
         StringSendPacket packet = new StringSendPacket(msg);
 
-        // 然后将该包交给发送调度者来发送
+        // 然后将该包交给发送调度者来发送（异步处理）
         sendDispatcher.send(packet);
     }
 

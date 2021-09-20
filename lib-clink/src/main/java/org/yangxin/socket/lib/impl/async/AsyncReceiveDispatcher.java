@@ -55,6 +55,9 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher,
         CloseUtils.close(this);
     }
 
+    /**
+     * 注册接收
+     */
     private void registerReceive() {
         try {
             // 异步接收

@@ -28,6 +28,7 @@ public class Server {
 
         // 启动tcp服务端，监听注册
         TcpServer server = new TcpServer(TcpConstants.PORT_SERVER, cachePath);
+        // tcp服务端启动
         boolean isSucceed = server.start();
         if (!isSucceed) {
             System.out.println("Start tcp server failed!");
@@ -41,19 +42,21 @@ public class Server {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String str;
         do {
+            // 从控制台读取一行，若读取到的字符串为“00bye00”，则退出当前键盘事件的循环监听
             str = reader.readLine();
             if ("00bye00".equalsIgnoreCase(str)) {
                 break;
             }
 
-            // 发送字符串
+            // 发送从控制台读取到的字符串
             server.broadcast(str);
         } while (true);
 
-        // 关闭相关资源
+        // 关闭相关资源（udp提供者和tcp服务端）
         UdpProvider.stop();
         server.stop();
 
+        // 关闭输入输出上下文
         IoContext.close();
     }
 }

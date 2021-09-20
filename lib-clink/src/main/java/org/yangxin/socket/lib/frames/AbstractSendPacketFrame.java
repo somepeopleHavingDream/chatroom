@@ -12,6 +12,9 @@ import java.io.IOException;
  */
 public abstract class AbstractSendPacketFrame extends AbstractSendFrame {
 
+    /**
+     * 用于此发送包帧的发送包
+     */
     protected volatile SendPacket<?> packet;
 
     public AbstractSendPacketFrame(int length, byte type, byte flag, short identifier, SendPacket<?> packet) {

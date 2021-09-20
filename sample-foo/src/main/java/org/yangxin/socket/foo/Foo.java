@@ -13,6 +13,12 @@ public class Foo {
 
     private static final String CACHE_DIR = "cache";
 
+    /**
+     * 获得一个指定的缓存目录
+     *
+     * @param dir 目录
+     * @return 指定的缓存目录
+     */
     public static File getCacheDir(String dir) {
         String path = System.getProperty("user.dir")
                 + (File.separator + CACHE_DIR)

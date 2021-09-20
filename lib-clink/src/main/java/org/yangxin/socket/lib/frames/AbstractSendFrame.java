@@ -11,11 +11,20 @@ import java.io.IOException;
  */
 public abstract class AbstractSendFrame extends Frame {
 
+    /**
+     * 帧头剩余的长度
+     */
     volatile byte headerRemaining = Frame.FRAME_HEADER_LENGTH;
+
+    /**
+     * 帧体剩余的长度
+     */
     volatile int bodyRemaining;
 
     public AbstractSendFrame(int length, byte type, byte flag, short identifier) {
         super(length, type, flag, identifier);
+
+        // 设置帧体剩余的长度
         bodyRemaining = length;
     }
 

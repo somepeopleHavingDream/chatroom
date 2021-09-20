@@ -19,22 +19,27 @@ public class Client {
         // 获得缓存路径
         File cachePath = Foo.getCacheDir("client");
 
+        // 设置并启动输入输出上下文环境
         IoContext.setup()
                 .ioProvider(new IoSelectorProvider())
                 .start();
 
+        // udp搜寻服务端信息，收到服务端信息的响应
         ServerInfo info = UdpSearcher.searchServer(10000);
         System.out.println("Server: " + info);
 
+        // 如果服务端信息存在
         if (info != null) {
             TcpClient client = null;
 
             try {
+                // tcp连接服务端，获得tcp客户端实例
                 client = TcpClient.startWith(info, cachePath);
                 if (client == null) {
                     return;
                 }
 
+                // 写入数据
                 write(client);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -48,6 +53,12 @@ public class Client {
         IoContext.close();
     }
 
+    /**
+     * 写入数据
+     *
+     * @param client 要写入数据的tcp客户端
+     * @throws IOException 输入输出异常
+     */
     private static void write(TcpClient client) throws IOException {
         // 构建键盘输入流
         InputStream in = System.in;

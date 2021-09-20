@@ -1,12 +1,5 @@
 package org.yangxin.socket.lib.box;
 
-import org.yangxin.socket.lib.core.SendPacket;
-
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-
 /**
  * 字符串发送包
  *
@@ -16,11 +9,12 @@ import java.io.InputStream;
 public class StringSendPacket extends BytesSendPacket {
 
     /**
-     * 字符串发送时就是Byte数组，所以直接得到Byte数组，并按照Byte的发送方式发送即可。
+     * 字符串发送时就是Byte数组，所以直接得到Byte数组，并按照Byte的发送方式发送即可
      *
      * @param msg 字符串
      */
     public StringSendPacket(String msg) {
+        // 调用父类的构造方法，将入参的字符串消息转换为了字节数组
         super(msg.getBytes());
     }
 

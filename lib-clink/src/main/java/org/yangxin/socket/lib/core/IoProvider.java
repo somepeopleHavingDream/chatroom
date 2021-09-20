@@ -41,6 +41,9 @@ public interface IoProvider extends Closeable {
      */
     void unRegisterOutput(SocketChannel channel);
 
+    /**
+     * 处理输入的回调
+     */
     abstract class HandleInputCallback implements Runnable {
 
         @Override

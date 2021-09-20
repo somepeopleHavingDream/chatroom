@@ -26,6 +26,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings({"AlibabaThreadPoolCreation", "AlibabaAvoidManuallyCreateThread", "SynchronizationOnLocalVariableOrMethodParameter"})
 public class IoSelectorProvider implements IoProvider {
 
+    /**
+     * 当前输入输出选择器提供者是否被关闭，初始值为false，代表该输入输出选择器提供者没有被关闭
+     */
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     /*
@@ -33,24 +36,50 @@ public class IoSelectorProvider implements IoProvider {
      */
 
     /**
-     * 是否处于注册输入过程
+     * 是否处于注册输入过程，初始值为false，即不是处于注册输入过程
      */
     private final AtomicBoolean isRegInput = new AtomicBoolean(false);
 
     /**
-     * 是否处于注册输出过程
+     * 是否处于注册输出过程，初始值为false，即不是处于注册输出过程
      */
     private final AtomicBoolean inRegOutput = new AtomicBoolean(false);
 
+    /**
+     * 读事件选择器
+     */
     private final Selector readSelector;
+
+    /**
+     * 写事件选择器
+     */
     private final Selector writeSelector;
 
+    /**
+     * 选择键 -> 输入回调
+     */
     private final Map<SelectionKey, Runnable> inputCallbackMap = new HashMap<>();
+
+    /**
+     * 选择键 -> 输出回调
+     */
     private final Map<SelectionKey, Runnable> outputCallbackMap = new HashMap<>();
 
+    /**
+     * 输入事件处理线程池
+     */
     private final ExecutorService inputHandlePool;
+
+    /**
+     * 输出事件处理线程池
+     */
     private final ExecutorService outputHandlePool;
 
+    /**
+     * 实例化一个选择器提供者
+     *
+     * @throws IOException 输入输出异常
+     */
     public IoSelectorProvider() throws IOException {
         // 实例化一个读选择器、写选择器
         readSelector = Selector.open();
@@ -78,7 +107,7 @@ public class IoSelectorProvider implements IoProvider {
                 // 如果当前输入输出选择器提供者未关闭
                 while (!isClosed.get()) {
                     try {
-                        // 如果读选择器没有就绪事件，则等待选择
+                        // 如果读选择器没有就绪事件，则等待选择（注意：select方法是阻塞的）
                         if (readSelector.select() == 0) {
                             // 等待选择
                             waitSelection(isRegInput);
@@ -102,6 +131,8 @@ public class IoSelectorProvider implements IoProvider {
                 }
             }
         };
+
+        // 设置读事件监听线程的优先级
         thread.setPriority(Thread.MAX_PRIORITY);
         // 开启该读事件监听线程
         thread.start();
@@ -137,6 +168,7 @@ public class IoSelectorProvider implements IoProvider {
                 }
             }
         };
+
         thread.setPriority(Thread.MAX_PRIORITY);
         // 开启该写事件监听线程
         thread.start();
@@ -150,7 +182,12 @@ public class IoSelectorProvider implements IoProvider {
 
     @Override
     public boolean registerOutput(SocketChannel channel, HandleOutputCallback callback) {
-        return registerSelection(channel, writeSelector, SelectionKey.OP_WRITE, inRegOutput, outputCallbackMap, callback)
+        return registerSelection(channel,
+                writeSelector,
+                SelectionKey.OP_WRITE,
+                inRegOutput,
+                outputCallbackMap,
+                callback)
                 != null;
     }
 
@@ -183,11 +220,11 @@ public class IoSelectorProvider implements IoProvider {
     /**
      * 等待选择
      *
-     * @param locker 是否处于某个过程
+     * @param locker 是否处于注册输入过程或注册输出过程
      */
     private void waitSelection(AtomicBoolean locker) {
         synchronized (locker) {
-            // 如果处于注册输入过程或处于注册输出过程，则等待线程通知该过程结束
+            // 如果处于注册输入过程或处于注册输出过程，则等待其他线程通知该过程结束
             if (locker.get()) {
                 try {
                     locker.wait();
@@ -201,12 +238,12 @@ public class IoSelectorProvider implements IoProvider {
     /**
      * 注册选择
      *
-     * @param channel 通道
-     * @param selector 选择器
+     * @param channel     通道
+     * @param selector    选择器
      * @param registerOps 被注册的操作
-     * @param locker 锁
-     * @param map SelectionKey -> Runnable
-     * @param runnable 可运行实例
+     * @param locker      锁
+     * @param map         SelectionKey -> Runnable
+     * @param runnable    可运行实例
      * @return 注册成功之后的选择键
      */
     private static SelectionKey registerSelection(SocketChannel channel,
@@ -217,7 +254,7 @@ public class IoSelectorProvider implements IoProvider {
                                                   Runnable runnable) {
         synchronized (locker) {
             // 设置锁定状态
-            // 标志当前输入输出选择器提供者处于注册服务过程或者处于注册输出过程
+            // 标志当前输入输出选择器提供者处于注册输入过程或者处于注册输出过程
             locker.set(true);
 
             try {
@@ -275,10 +312,10 @@ public class IoSelectorProvider implements IoProvider {
     /**
      * 处理选择
      *
-     * @param key 被处理的选择键
+     * @param key    被处理的选择键
      * @param keyOps 键操作
-     * @param map 键所对应的回调映射
-     * @param pool 处理该选择的线程池
+     * @param map    键所对应的回调映射
+     * @param pool   处理该选择的线程池
      */
     private static void handleSelection(SelectionKey key,
                                         int keyOps,
@@ -295,6 +332,7 @@ public class IoSelectorProvider implements IoProvider {
         } catch (Exception ignored) {
         }
 
+        // 如果回调不为null，并且事件的处理线程池未关闭，则将该回调交由处理线程池运行
         if (runnable != null && !pool.isShutdown()) {
             // 异步调度
             pool.execute(runnable);

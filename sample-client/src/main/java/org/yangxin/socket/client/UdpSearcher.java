@@ -23,7 +23,14 @@ public class UdpSearcher {
 
     public static final Integer LISTEN_PORT = UdpConstants.portClientResponse;
 
+    /**
+     * 搜寻服务端信息
+     *
+     * @param timeout 搜寻时延
+     * @return 服务端信息
+     */
     public static ServerInfo searchServer(Integer timeout) {
+        // 打印udp搜寻日志
         System.out.println("UdpSearcher started.");
 
         // 成功收到回送的栅栏
@@ -55,7 +62,15 @@ public class UdpSearcher {
         return null;
     }
 
+    /**
+     * 开启对服务端回送消息的监听
+     *
+     * @param receiveLatch 回送栅栏
+     * @return 监听者
+     * @throws InterruptedException 被中断异常
+     */
     private static Listener listen(CountDownLatch receiveLatch) throws InterruptedException {
+        // 打印日志，udp搜寻者开始监听
         System.out.println("UdpSearcher start listen.");
 
         // 开启监听
@@ -64,11 +79,18 @@ public class UdpSearcher {
         Thread thread = new Thread(listener);
         thread.start();
 
-        // 等待监听开启
+        // 等待监听开启（用于运行监听的线程启动就放开这个栅栏）
         startDownLatch.await();
+
+        // 返回监听者
         return listener;
     }
 
+    /**
+     * 发送广播
+     *
+     * @throws IOException 输入输出异常
+     */
     private static void sendBroadcast() throws IOException {
         System.out.println("UdpSearcher sendBroadcast started.");
 
@@ -98,11 +120,20 @@ public class UdpSearcher {
         System.out.println("UdpSearcher sendBroadcast finished.");
     }
 
+    /**
+     * udp搜寻监听者
+     */
     private static class Listener implements Runnable {
+
         private final Integer listenPort;
         private final CountDownLatch startDownLatch;
         private final CountDownLatch receiveDownLatch;
+
+        /**
+         * 收到的服务端信息
+         */
         private final List<ServerInfo> serverInfoList = new ArrayList<>();
+
         private final byte[] buffer = new byte[128];
         private final Integer minLength = UdpConstants.header.length + 2 + 4;
         private boolean done = false;
@@ -168,13 +199,19 @@ public class UdpSearcher {
                 }
             } catch (Exception ignored) {
             } finally {
+                // 关闭监听者
                 close();
             }
 
+            // 打印日志：udp搜寻者监听结束
             System.out.println("UdpSearcher listener finished.");
         }
 
+        /**
+         * 关闭监听者
+         */
         private void close() {
+            // 关闭用户数据报套接字，并置null
             if (datagramSocket != null) {
                 datagramSocket.close();
                 datagramSocket = null;

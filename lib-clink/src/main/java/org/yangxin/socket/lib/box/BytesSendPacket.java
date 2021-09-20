@@ -12,9 +12,13 @@ import java.io.ByteArrayInputStream;
  */
 public class BytesSendPacket extends SendPacket<ByteArrayInputStream> {
 
+    /**
+     * 用于发送的字节数组
+     */
     private final byte[] bytes;
 
     public BytesSendPacket(byte[] bytes) {
+        // 设置需要发送的字节数组和字节数组的长度
         this.bytes = bytes;
         this.length = bytes.length;
     }

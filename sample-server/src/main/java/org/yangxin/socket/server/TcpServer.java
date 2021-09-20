@@ -25,12 +25,29 @@ import java.util.concurrent.Executors;
 @SuppressWarnings({"AlibabaThreadPoolCreation", "AlibabaAvoidManuallyCreateThread"})
 public class TcpServer implements ClientHandler.ClientHandlerCallback {
 
+    /**
+     * tcp服务端用于监听客户端连接的端口
+     */
     private final int port;
+
     private final File cachePath;
     private final ExecutorService forwardingExecutor;
+
+    /**
+     * 用于该tcp服务端的客户端监听者
+     */
     private ClientListener listener;
+
+    /**
+     * 该tcp服务端的所有客户端处理者
+     */
     private final List<ClientHandler> handlers = new ArrayList<>();
+
+    /**
+     * 用于监听客户端连接的选择器
+     */
     private Selector selector;
+
     private ServerSocketChannel channel;
 
     public TcpServer(int port, File cachePath) {
@@ -52,28 +69,33 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
             // 获得并设置选择器，用于监听客户端的连接
             selector = Selector.open();
 
+            // 打开一个服务套接字通道
             ServerSocketChannel channel = ServerSocketChannel.open();
             // 设置为非阻塞
             channel.configureBlocking(false);
             // 绑定本地端口
             channel.socket().bind(new InetSocketAddress(port));
-            // 注册客户端连接到达监听
+            // 注册客户端就绪事件到达监听
             channel.register(selector, SelectionKey.OP_ACCEPT);
+            // 设置通道
             this.channel = channel;
 
+            // 打印服务端信息
             System.out.println("服务器信息：" + channel.getLocalAddress().toString());
 
-            // 启动客户端监听
+            // 获取客户端监听，并设置和启动客户端监听
             ClientListener listener = new ClientListener();
             this.listener = listener;
             Thread thread = new Thread(listener);
             listener.setThread(thread);
             thread.start();
         } catch (IOException e) {
+            // 若在tcp服务端启动的过程中捕获到了输入输出异常，则打印堆栈信息，并返回tcp服务端启动失败
             e.printStackTrace();
             return false;
         }
 
+        // 返回tcp服务端启动成功
         return true;
     }
 
@@ -100,7 +122,13 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
         forwardingExecutor.shutdownNow();
     }
 
+    /**
+     * 广播来自服务端的消息
+     *
+     * @param msg 来自服务端的消息
+     */
     public synchronized void broadcast(String msg) {
+        // 所有的客户端处理者发送来自服务端的消息
         handlers.forEach(handler -> handler.send(msg));
     }
 
@@ -133,6 +161,9 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
     @Setter
     private class ClientListener implements Runnable {
 
+        /**
+         * 用于执行该客户端监听者的线程
+         */
         private Thread thread;
 
         @Override
@@ -160,6 +191,7 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                             break;
                         }
 
+                        // 拿到一个选择键，并将该选择键从集合中移除
                         SelectionKey key = iterator.next();
                         iterator.remove();
 
@@ -175,21 +207,25 @@ public class TcpServer implements ClientHandler.ClientHandlerCallback {
                                 ClientHandler handler = new ClientHandler(clientChannel,
                                         TcpServer.this,
                                         cachePath);
-                                // 添加同步处理
+
+                                // 添加同步处理，将此客户端处理者放入到处理者集合中
                                 synchronized (TcpServer.this) {
                                     handlers.add(handler);
                                 }
                             } catch (IOException e) {
+                                // 若捕获到输入输出异常，则打印堆栈信息
                                 e.printStackTrace();
                                 System.out.println("客户端连接异常：" + e.getMessage());
                             }
                         }
                     }
                 } catch (IOException e) {
+                    // 若捕获到输入输出异常，则打印堆栈信息
                     e.printStackTrace();
                 }
             } while (!Thread.currentThread().isInterrupted());
 
+            // 打印日志：服务端已关闭
             System.out.println("服务器已关闭！");
         }
 

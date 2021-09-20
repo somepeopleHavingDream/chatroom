@@ -42,13 +42,25 @@ public class IoContext {
         return new StartedBoot();
     }
 
+    /**
+     * 关闭输入输出上下文
+     *
+     * @throws IOException 输入输出异常
+     */
     public static void close() throws IOException {
+        // 如果当前输入输出上下文不为null，则调用关闭方法
         if (instance != null) {
             instance.callClose();
         }
     }
 
+    /**
+     * 调用关闭
+     *
+     * @throws IOException 输入输出异常
+     */
     private void callClose() throws IOException {
+        // 输入输出提供者关闭
         ioProvider.close();
     }
 
@@ -63,6 +75,12 @@ public class IoContext {
         private StartedBoot() {
         }
 
+        /**
+         * 设置输入输出提供者，并返回启动引导
+         *
+         * @param provider 输入输出提供者
+         * @return 启动引导实例
+         */
         public StartedBoot ioProvider(IoProvider provider) {
             this.provider = provider;
             return this;
