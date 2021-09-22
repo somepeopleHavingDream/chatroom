@@ -31,17 +31,23 @@ public abstract class AbstractSendFrame extends Frame {
     @Override
     public synchronized boolean handle(IoArgs args) throws IOException {
         try {
+            // 设置输入输出参数写的字节数
             args.limit(headerRemaining + bodyRemaining);
             args.startWriting();
 
+            // 如果帧头还未被消费完，并且输入输出参数仍有剩余
             if (headerRemaining > 0 && args.remained()) {
+                // 消费头部，并且更新头部剩余
                 headerRemaining -= consumeHeader(args);
             }
 
+            // 如果帧头已被消费完，并且输入输出参数仍有剩余，并且帧体还未被消费完
             if (headerRemaining == 0 && args.remained() && bodyRemaining > 0) {
+                // 消费帧体
                 bodyRemaining -= consumeBody(args);
             }
 
+            // 返回当前帧是否已被消费完
             return headerRemaining == 0 && bodyRemaining == 0;
         } finally {
             args.finishWriting();
@@ -53,6 +59,12 @@ public abstract class AbstractSendFrame extends Frame {
         return headerRemaining + bodyRemaining;
     }
 
+    /**
+     * 消费帧头
+     *
+     * @param args 输入输出参数
+     * @return 消费了多少个字节
+     */
     private byte consumeHeader(IoArgs args) {
         int count = headerRemaining;
         int offset = header.length - count;
@@ -60,7 +72,7 @@ public abstract class AbstractSendFrame extends Frame {
     }
 
     /**
-     * 消费消息体
+     * 消费帧体体
      *
      * @param args 输入输出参数
      * @return 消费了多少个字节
@@ -68,6 +80,11 @@ public abstract class AbstractSendFrame extends Frame {
      */
     protected abstract int consumeBody(IoArgs args) throws IOException;
 
+    /**
+     * 当前帧是否已处于发送状态
+     *
+     * @return 帧是否发送
+     */
     protected synchronized boolean isSending() {
         return headerRemaining < Frame.FRAME_HEADER_LENGTH;
     }

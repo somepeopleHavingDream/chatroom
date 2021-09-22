@@ -42,8 +42,7 @@ public abstract class AbstractSendPacketFrame extends AbstractSendFrame {
     }
 
     /**
-     * 构建下一帧时做一次判断，如果已经终止，则没有下一帧；
-     * 如果没有则尝试进行构建。
+     * 下一帧
      *
      * @return 下一帧
      */

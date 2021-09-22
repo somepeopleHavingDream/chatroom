@@ -58,9 +58,12 @@ public class SendHeaderFrame extends AbstractSendPacketFrame {
 
     @Override
     public Frame buildNextFrame() {
+        // 从包处，打开一个输入流
         InputStream stream = packet.open();
+        // 通过输入流，打开一个可读字节通道
         ReadableByteChannel channel = Channels.newChannel(stream);
 
+        // 实例化一个发送实体帧
         return new SendEntityFrame(getBodyIdentifier(), packet.length(), channel, packet);
     }
 }

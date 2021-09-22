@@ -23,6 +23,9 @@ public class AsyncPacketReader implements Closeable {
      */
     private final PacketProvider provider;
 
+    /**
+     * 底层数据结构：输入输出参数
+     */
     private volatile IoArgs args = new IoArgs();
 
     /**
@@ -88,14 +91,16 @@ public class AsyncPacketReader implements Closeable {
         }
 
         try {
+            // 如果当前帧已被处理完
             if (currentFrame.handle(args)) {
                 // 消费完本帧
                 // 尝试基于本帧构建后续帧
                 Frame nextFrame = currentFrame.nextFrame();
                 if (nextFrame != null) {
+                    // 如果下一帧存在，则追加新帧
                     appendNewFrame(nextFrame);
                 } else if (currentFrame instanceof SendEntityFrame) {
-                    // 末尾实体帧
+                    // 当前帧被处理完，且当前帧是发送实体帧，则当前帧是末尾实体帧
                     // 通知完成
                     provider.completedPacket(((SendEntityFrame) currentFrame).getPacket(), true);
                 }
@@ -104,6 +109,7 @@ public class AsyncPacketReader implements Closeable {
                 popCurrentFrame();
             }
 
+            // 返回输入输出参数
             return args;
         } catch (IOException e) {
             e.printStackTrace();
@@ -202,10 +208,14 @@ public class AsyncPacketReader implements Closeable {
         return node.item;
     }
 
+    /**
+     * 弹出当前帧
+     */
     private synchronized void popCurrentFrame() {
         node = node.next;
         nodeSize--;
         if (node == null) {
+            // 请求拿出一个包
             requestTakePacket();
         }
     }

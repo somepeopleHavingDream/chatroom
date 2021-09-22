@@ -17,9 +17,9 @@ public class SendEntityFrame extends AbstractSendPacketFrame {
     private final long unConsumeEntityLength;
 
     SendEntityFrame(short identifier,
-                           long entityLength,
-                           ReadableByteChannel channel,
-                           SendPacket<?> packet) {
+                    long entityLength,
+                    ReadableByteChannel channel,
+                    SendPacket<?> packet) {
         super((int) Math.min(entityLength, Frame.MAX_CAPACITY),
                 Frame.TYPE_PACKET_ENTITY,
                 Frame.FLAG_NONE,
@@ -29,6 +29,8 @@ public class SendEntityFrame extends AbstractSendPacketFrame {
         // 1234567890
         // 1234 5678 90
         // 10 4,6 4,2 2
+
+        // 设置未消费的实体长度
         unConsumeEntityLength = entityLength - bodyRemaining;
         this.channel = channel;
     }

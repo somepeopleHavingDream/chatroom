@@ -125,6 +125,7 @@ public class AsyncSendDispatcher implements SendDispatcher,
      */
     @Override
     public void completedPacket(SendPacket<?> packet, boolean isSucceed) {
+        // 关闭此包
         CloseUtils.close(packet);
     }
 
@@ -171,6 +172,7 @@ public class AsyncSendDispatcher implements SendDispatcher,
     public void onConsumeCompleted(IoArgs args) {
         // 继续发送当前包
         if (reader.requestTakePacket()) {
+            // 请求发送
             requestSend();
         }
     }
