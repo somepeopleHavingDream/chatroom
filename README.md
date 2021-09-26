@@ -83,7 +83,21 @@
     - Foo
 
 - 涉及到的数据结构
-  - Byte
-  - IoArgs
-  - Frame
   - Packet
+  - Frame
+  - IoArgs
+  - ByteBuffer
+
+- 规则
+  - Packet规则（代码中未体现）
+    - 包头（4byte）
+    - 包体（Stream）
+  - 分片消息规则
+    - 帧头
+      - 当前帧大小 2-byte 16位
+      - 帧类型 1-byte 8位
+      - 帧标志信息 1-byte 8位
+      - 对应包唯一标识 1-byte 8位
+      - 预留空间 1-byte 8位
+    - 帧体
+      - 数据区 Frame Payload
