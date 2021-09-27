@@ -16,6 +16,7 @@ import java.io.IOException;
  * @author yangxin
  * 2021/9/15 下午9:04
  */
+@SuppressWarnings("AlibabaUndefineMagicConstant")
 public class AsyncPacketReader implements Closeable {
 
     /**
