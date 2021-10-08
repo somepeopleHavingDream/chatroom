@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class IoSelectorProvider implements IoProvider {
 
     /**
-     * 当前输入输出选择器提供者是否被关闭，初始值为false，代表该输入输出选择器提供者没有被关闭
+     * 当前输入输出选择器提供者是否被关闭，初始值为假，代表该输入输出选择器提供者没有被关闭
      */
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
